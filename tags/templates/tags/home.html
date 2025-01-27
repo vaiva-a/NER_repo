@@ -1,0 +1,244 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tag Manager</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+        }
+
+        .text-area {
+            flex: 2;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            min-height: 200px;
+        }
+
+        .sidebar {
+            flex: 1;
+        }
+
+        .tag-list {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background: #f0f0f0;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .add-tag,
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-tag:hover,
+        .submit-btn:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="text-area">
+                <div id="paraContent">Loading...</div>
+                <div id="currentFileName" style="margin-top: 10px; font-size: 14px; color: #555;"></div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="prevLine()">Previous</button>
+                <button class="nav-btn" onclick="nextLine()">Next</button>
+            </div>
+            <div class="sidebar">
+
+                <div class="tag-list">
+                    {% for tag in tags %}
+                    <div class="tag">{{ tag }}</div>
+                    {% endfor %}
+                </div>
+                <button class="add-tag" onclick="showAddTagPrompt()">add tag</button>
+                <button class="submit-btn" onclick="submitFile()">Submit</button>
+                <button class="reset-btn" onclick="resetPickedFiles()">Skip</button>
+            </div>
+            <button class="clear-btn" onclick="clearAllTags()">Clear All Tags</button>
+        </div>
+    </div>
+
+    <script>
+        function showAddTagPrompt() {
+            const newTag = prompt("Enter new tag:");
+            if (newTag) {
+                fetch('/add_tag/', {
+                    method: 'POST',
+                    body: JSON.stringify({ tag: newTag }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // location.reload();
+                            const tagListDiv = document.querySelector('.tag-list');
+                            const newTagDiv = document.createElement('div');
+                            newTagDiv.className = 'tag';
+                            newTagDiv.innerText = newTag;
+
+                            // Append the new tag to the tag-list div
+                            tagListDiv.appendChild(newTagDiv);
+                            console.log("hello");
+                        }
+                    });
+            }
+        }
+    </script>
+    <script>
+        let lines = []; // Array to hold lines of the paragraph
+        let currentIndex = 0; // Current line index
+        var fileName;
+        // Fetch the paragraph content and split it into lines
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/get_paragraph/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        lines = data.paragraph.split('\n'); // Split content into lines
+                        fileName = data.filename;
+                        showLine(0); // Display the first line
+                        document.getElementById('currentFileName').innerText = data.filename;
+                    } else {
+                        document.getElementById('paraContent').innerText = "Error loading paragraph.";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching paragraph:", error);
+                    document.getElementById('paraContent').innerText = "Failed to load paragraph.";
+                });
+        });
+
+        function refreshPage() {
+            location.reload(); // Reloads the current page
+        }
+
+        function showLine(index) {
+            if (index >= 0 && index < lines.length) {
+                currentIndex = index;
+                document.getElementById('paraContent').innerText = lines[index];
+            }
+        }
+
+        function submitFile() {
+            // Get the current file name displayed
+            const currentFileName = document.getElementById('currentFileName').innerText;
+
+            fetch('/submit_file/', {
+                method: 'POST',
+                body: JSON.stringify({ filename: currentFileName }),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message); // Show success message
+                        location.reload(); // Reload the page to fetch a new paragraph
+                    } else {
+                        alert(`Error: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error submitting file:", error);
+                    alert('Failed to submit file.');
+                });
+        }
+
+        // Go to the previous line
+        function prevLine() {
+            if (currentIndex > 0) {
+                showLine(currentIndex - 1);
+            } else {
+                alert('You are at the first line.');
+            }
+        }
+
+        // Go to the next line
+        function nextLine() {
+            if (currentIndex < lines.length - 1) {
+                showLine(currentIndex + 1);
+            } else {
+                alert('You are at the last line.');
+            }
+        }
+
+        function resetPickedFiles() {
+            fetch('/reset_picked_files/', {
+                method: 'GET',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message); // Show reset success message
+                    } else {
+                        alert('Error resetting picked files.');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error resetting picked files:", error);
+                    alert('Failed to reset picked files.');
+                });
+        }
+
+        function clearAllTags() {
+            fetch('/clear_tags/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Clear the tag-list div
+                        const tagListDiv = document.querySelector('.tag-list');
+                        tagListDiv.innerHTML = ''; // Remove all tags from the UI
+                        alert(data.message);
+                    } else {
+                        alert(`Error: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error clearing tags:", error);
+                    alert('Failed to clear tags.');
+                });
+        }
+
+    </script>
+</body>
+
+</html>
