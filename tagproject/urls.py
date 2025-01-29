@@ -21,6 +21,7 @@ from tags import views
 urlpatterns = [
     path('', views.login_page, name='login'),
     path('home/', views.home, name='home'),
+    path('adminhome/', views.adminhome, name='adminhome'),
     path('add_tag/', views.add_tag, name='add_tag'),
     path('admin/', admin.site.urls),
     path('get_paragraph/', views.get_paragraph, name='get_paragraph'),
@@ -28,4 +29,6 @@ urlpatterns = [
      path('reset_picked_files/', views.reset_picked_files, name='reset_picked_files'),
      path('clear_tags/', views.clear_tags, name='clear_tags'),
      path('accounts/', include('django.contrib.auth.urls')),
+     path('skip_file/', views.skip_file, name='skip_file'),
+     path('add_annotator/', views.add_annotator, name='add_annotator'),
 ]

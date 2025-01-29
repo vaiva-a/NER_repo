@@ -14,6 +14,11 @@ def home(request):
     tag_manager = TagManager.get_instance()
     return render(request, 'tags/home.html', {'tags': tag_manager.tags})
 
+@login_required(login_url='')
+def adminhome(request):
+    tag_manager = TagManager.get_instance()
+    return render(request, 'tags/adminhome.html', {'tags': tag_manager.tags})
+
 @csrf_exempt
 def add_tag(request):
     if request.method == 'POST':
@@ -43,6 +48,62 @@ def clear_tags(request):
             return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+
+@csrf_exempt
+def add_annotator(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+
+            # Validate required fields
+            if not username or not password:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Username and password are required'
+                })
+
+            # Check if username already exists
+            if Annotators.objects.filter(username=username).exists():
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Username already exists'
+                })
+
+            # Generate next ID
+            last_annotator = Annotators.objects.order_by('-ID').first()
+            next_id = 1 if not last_annotator else last_annotator.ID + 1
+
+
+            Admin.objects.create(ID=next_id,username=username, password=password)
+            # Create new annotator
+            # annotator = Annotators(
+            #     ID=next_id,
+            #     username=username,
+            #     password=password  # Note: Consider using password hashing
+            # )
+            # annotator.save()
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Annotator created successfully',
+                'data': {
+                    'id': next_id,
+                    'username': username
+                }
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            })
+
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Invalid request method'
+    })
 
 @csrf_exempt
 def submit_file(request):
@@ -117,6 +178,43 @@ def get_paragraph(request):
 
     return JsonResponse({"status": "success", "paragraph": content, "filename": next_file})
 
+def skip_file(request):
+    # Path to text files and picked files JSON
+    text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
+    picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+
+    # Ensure the picked files JSON exists
+    if not os.path.exists(picked_files_path):
+        with open(picked_files_path, 'w') as f:
+            json.dump([], f)
+
+    # Load the picked files list
+    with open(picked_files_path, 'r') as f:
+        picked_files = json.load(f)
+
+    # Parse the current filename from the frontend
+    current_file = request.GET.get('currentFileName', None)
+
+    # List all text files in the directory
+    all_text_files = [f for f in os.listdir(text_files_dir) if f.endswith('.txt')]
+
+    # Find files not yet picked and exclude the current file
+    remaining_files = [f for f in all_text_files if f not in picked_files and f != current_file]
+
+    # Handle case when no files are left
+    if not remaining_files:
+        return JsonResponse({"status": "error", "message": "No more files available to skip."})
+
+    # Pick the next file
+    next_file = remaining_files[0]
+    file_path = os.path.join(text_files_dir, next_file)
+
+    # Read the content of the next file
+    with open(file_path, 'r') as file:
+        content = file.read()
+
+    return JsonResponse({"status": "success", "paragraph": content, "filename": next_file})
+
 def reset_picked_files(request):
     picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
 
@@ -132,20 +230,23 @@ def reset_picked_files(request):
         return JsonResponse({"status": "error", "message": str(e)})
 
 def login_page(request):
-    
     if request.method == "POST":
         # admin_user = Admin.objects.create(username="admin", password="admin")
         username = request.POST.get('username')
         password = request.POST.get('password')
+       
         user = authenticate(request, username=username, password=password)
-
         # Check for admin login
         try:
+            
+            print("here1")
             admin_user = Admin.objects.get(username=username, password=password)
+            print(admin_user,user)
             if admin_user and user is not None:
                 print("Admin authenticated")
                 login(request,user)
-                return redirect('/home')  # Redirect to admin home
+                return redirect('/adminhome')  # Redirect to admin home
+                
             else:
                 return render(request, 'registration/login.html')
 
@@ -154,12 +255,16 @@ def login_page(request):
 
         # Check for annotator login
         try:
+            print("here")
+            print(username,password)
             annotator_user = Annotators.objects.get(username=username, password=password)
+            print(annotator_user,user)
             if annotator_user and user is not None:
                 print("Annotator authenticated")
                 login(request,user)
                 return redirect('/home')  # Redirect to user home
             else:
+                print("doesnt exist")
                 return render(request, 'registration/login.html')
         except Annotators.DoesNotExist:
             pass
