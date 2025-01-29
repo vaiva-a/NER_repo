@@ -1,64 +1,131 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
     <title>Tag Manager</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
+        body {
+            background-color: #f7f9fc;
+            color: #2d3748;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
         .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 32px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
         .main-content {
-            display: flex;
-            gap: 20px;
+            display: grid;
+            grid-template-columns: 3fr 80px 1fr;
+            gap: 24px;
         }
 
         .text-area {
-            flex: 2;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            min-height: 200px;
+            background: #ffffff;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            min-height: 240px;
+            transition: all 0.2s ease;
         }
 
-        .sidebar {
-            flex: 1;
+        .text-area:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        #paraContent {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        #currentFileName {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 12px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            width: 100%;
+            padding: 12px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: #4a5568;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: #edf2f7;
+            transform: translateY(-1px);
         }
 
         .tag-list {
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 20px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
         }
 
         .tag {
-            background: #f0f0f0;
-            padding: 5px 10px;
-            margin: 5px 0;
-            border-radius: 4px;
-            display: block;
+            background: #edf2f7;
+            color: #2d3748;
+            padding: 8px 16px;
+            margin: 8px 0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
         }
 
-        .add-tag,
-        .submit-btn {
-            display: block;
+        .tag:hover {
+            background: #e2e8f0;
+        }
+
+        .submit-btn, .reset-btn {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
         }
 
-        .add-tag:hover,
+        .submit-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+        }
+
         .submit-btn:hover {
-            background: #f0f0f0;
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+
+        .reset-btn {
+            background: #fff;
+            color: #e53e3e;
+            border: 1px solid #e53e3e;
+        }
+
+        .reset-btn:hover {
+            background: #fff5f5;
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -68,30 +135,28 @@
         <div class="main-content">
             <div class="text-area">
                 <div id="paraContent">Loading...</div>
-                <div id="currentFileName" style="margin-top: 10px; font-size: 14px; color: #555;"></div>
+                <div id="currentFileName"></div>
             </div>
             <div class="nav-buttons">
-                <button class="nav-btn" onclick="prevLine()">Previous</button>
-                <button class="nav-btn" onclick="nextLine()">Next</button>
+                <button class="nav-btn" onclick="prevLine()">
+                    ↑
+                </button>
+                <button class="nav-btn" onclick="nextLine()">
+                    ↓
+                </button>
             </div>
             <div class="sidebar">
-
                 <div class="tag-list">
                     {% for tag in tags %}
                     <div class="tag">{{ tag }}</div>
                     {% endfor %}
                 </div>
-                <!-- <button class="add-tag" onclick="showAddTagPrompt()">add tag</button> -->
                 <button class="submit-btn" onclick="submitFile()">Submit</button>
                 <button class="reset-btn" onclick="skipFile()">Skip</button>
             </div>
-            <!-- <button class="clear-btn" onclick="clearAllTags()">Clear All Tags</button> -->
         </div>
     </div>
 
-    <script>
-        
-    </script>
     <script>
         let lines = []; // Array to hold lines of the paragraph
         let currentIndex = 0; // Current line index
@@ -102,7 +167,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        lines = data.paragraph.split('\n'); // Split content into lines
+                        lines = data.paragraph.split('.'); // Split content into lines
                         fileName = data.filename;
                         showLine(0); // Display the first line
                         document.getElementById('currentFileName').innerText = data.filename;
@@ -240,8 +305,6 @@
                     alert('Failed to clear tags.');
                 });
         }
-
     </script>
 </body>
-
 </html>
