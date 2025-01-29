@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate,login
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
 import json
 from .models import TagManager,Admin,Annotators
 import os
@@ -75,8 +76,8 @@ def add_annotator(request):
             last_annotator = Annotators.objects.order_by('-ID').first()
             next_id = 1 if not last_annotator else last_annotator.ID + 1
 
-
-            Admin.objects.create(ID=next_id,username=username, password=password)
+            user = User.objects.create_user(username=username,email=username,password=password)
+            Annotators.objects.create(ID=next_id,username=username, password=password)
             # Create new annotator
             # annotator = Annotators(
             #     ID=next_id,
