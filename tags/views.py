@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 import json
 from .models import TagManager,Admin,Annotators
 import os
+from django.core.files.storage import default_storage
 from django.conf import settings
 from django.http import JsonResponse
 
@@ -46,6 +47,7 @@ def clear_tags(request):
 
             return JsonResponse({'status': 'success', 'message': 'All tags removed successfully.'})
         except Exception as e:
+            print(e)
             return JsonResponse({'status': 'error', 'message': str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
@@ -276,3 +278,20 @@ def login_page(request):
 
     return render(request, 'registration/login.html')
         
+UPLOAD_DIR = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)  # Ensure directory exists
+
+@csrf_exempt
+def upload_file(request):
+    if request.method == 'POST' and request.FILES.get('file'):
+        uploaded_file = request.FILES['file']
+        file_path = os.path.join(UPLOAD_DIR, uploaded_file.name)
+
+        with default_storage.open(file_path, 'wb+') as destination:
+            for chunk in uploaded_file.chunks():
+                destination.write(chunk)
+
+        return JsonResponse({'status': 'success', 'message': 'File uploaded successfully!'})
+
+    return JsonResponse({'status': 'error', 'message': 'No file provided!'}, status=400)

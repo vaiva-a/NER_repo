@@ -314,39 +314,104 @@
         }
 
 
-        function addUser() {
-            // Empty function for now
-            console.log('Add user clicked');
-        }
+        // function addUser() {
+        //     // Empty function for now
+        //     console.log('Add user clicked');
+        // }
 
         function clearTags() {
-            // Empty function for now
-            console.log('Clear tags clicked');
+            fetch('/clear_tags/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status == 'success') {
+                        // Clear the tag-list div
+                        // const tagListDiv = document.querySelector('.tag-list');
+                        // tagListDiv.innerHTML = ''; // Remove all tags from the UI
+                        alert(data.message);
+                    } else {
+                        alert(`Error: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error clearing tags:", error);
+                    alert('Failed to clear tags.');
+                });
         }
+        document.getElementById('file-input').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            event.preventDefault();
+            const file = event.target.files ? event.target.files[0] : event.dataTransfer.files[0];
+
+            if (!file) {
+                alert("No file selected!");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            fetch("/upload_file/", {
+                method: "POST",
+                body: formData,
+            })
+                .then(response => response.json()) // Ensure JSON parsing
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("File uploaded successfully!");
+                    } else {
+                        alert("File upload failed: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Upload Error:", error);
+                    alert("File upload failed.");
+                });
+        }
+    </script>
+    <script>
+        // function handleFileUpload(file) {
+        //     const formData = new FormData();
+        //     formData.append("file", file);
+
+        //     fetch("/upload_file/", {
+        //         method: "POST",
+        //         body: formData
+        //     })
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             alert(data.message);
+        //         })
+        //         .catch(error => {
+        //             console.error("File upload failed:", error);
+        //             alert("Error uploading file.");
+        //         });
+        // }
 
         function triggerFileInput() {
-            document.getElementById('file-input').click();
+            document.getElementById("file-input").click();
         }
+
+        document.getElementById("file-input").addEventListener("change", function (event) {
+            if (event.target.files.length > 0) {
+                handleFileUpload(event.target.files[0]);
+            }
+        });
 
         function handleDragOver(event) {
             event.preventDefault();
-            event.stopPropagation();
+            event.dataTransfer.dropEffect = "copy";
         }
 
         function handleDrop(event) {
             event.preventDefault();
-            event.stopPropagation();
-            const files = event.dataTransfer.files;
-            // Handle the dropped files here
-            console.log('Files dropped:', files);
+            handleFileUpload(event);
         }
-
-        // Listen for file input changes
-        document.getElementById('file-input').addEventListener('change', function (event) {
-            const files = event.target.files;
-            // Handle the selected files here
-            console.log('Files selected:', files);
-        });
     </script>
 </body>
 

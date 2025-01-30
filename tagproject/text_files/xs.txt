@@ -1,0 +1,109 @@
+/*create database dbs_sbos_proj;*/
+use dbs_sbos_proj;
+create table accounts(
+acc_no int primary key
+);
+
+create table user(
+name varchar(10),
+mail varchar(20) primary key,
+passwd varchar(15),
+credits int,
+pin int,
+acc_no int references accounts);
+
+create table vp(
+name varchar(10),
+mail varchar(20) primary key,
+passwd varchar(15),
+acc_no int references accounts);
+
+create table org(
+name varchar(10),
+mail varchar(20) primary key,
+passwd varchar(15),
+acc_no int references accounts);
+
+create table th_org(
+name varchar(10),
+mail varchar(20) primary key,
+passwd varchar(15),
+acc_no int references accounts);
+
+create table transaction_audit(
+	transaction_id varchar(10) primary key,
+    sender int references accounts(acc_no),
+    reciever int references  accounts(acc_no),
+    t_date date,
+    t_status varchar(10)
+);
+
+create table venueue(
+	ven_id int primary key,
+    ven_name varchar(10),
+    vp varchar(20) references vp(mail),
+    v_img1 mediumblob,
+    v_img2 mediumblob,
+    cap int,
+    details varchar(200),
+    cost_per_day int,
+    location varchar(20)
+);
+
+create table _show(
+	show_id int,
+    show_name varchar(10),
+    v_id int references venueue(ven_id),
+    performer_name varchar(10),
+    event_date date,
+    org_name varchar(10) references org(name),
+    img mediumblob,
+    primary key(show_id,event_date)
+);
+
+create table show_seats(
+	show_id int references _show,
+    seat_no int,
+    u_id varchar(15) references user(mail),
+    cost int,
+    primary key(show_id,seat_no)
+);
+
+create table login_audit(
+	name varchar(10),
+    mail varchar(10) references user(mail),
+    time_of_login datetime
+);
+
+insert into accounts values(11111);
+
+create table theater(
+	th_name varchar(10),
+    th_id int primary key,
+    th_org varchar(15) references th_org(mail)
+);
+
+create table room1(
+	th_id int references theater,
+    show_id varchar(3),
+    show_ varchar(10),
+    s_date_time datetime,
+    room_id int,
+    primary key(s_date_time,room_id,th_id)
+);
+
+
+
+create table seat(
+	row_ int,
+    col_ int,
+    u_id varchar(15) references user(mail),
+    cost int,
+    room_id int references room,
+    th_id int references theater,
+    primary key(row_,col_,room_id,th_id)
+);
+    
+commit;
+
+

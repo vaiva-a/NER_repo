@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from tags import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.login_page, name='login'),
@@ -31,4 +33,7 @@ urlpatterns = [
      path('accounts/', include('django.contrib.auth.urls')),
      path('skip_file/', views.skip_file, name='skip_file'),
      path('add_annotator/', views.add_annotator, name='add_annotator'),
+      path('upload_file/', views.upload_file, name='upload_file'),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
