@@ -35,5 +35,3 @@ urlpatterns = [
      path('add_annotator/', views.add_annotator, name='add_annotator'),
       path('upload_file/', views.upload_file, name='upload_file'),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
