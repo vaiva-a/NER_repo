@@ -1,5 +1,4 @@
 db.sqlite3
-tags\__pycache__
-tagproject\__pycache__
-
-
+tags/__pycache__/
+tagproject/__pycache__/
+*.py[cod]
