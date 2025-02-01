@@ -51,6 +51,8 @@
         <button onclick="assignTag()" class="ml-2 p-2 bg-blue-500 text-white rounded">Assign Tag</button>
         
         <button onclick="submitFile()" class="mt-4 p-2 bg-green-500 text-white rounded">Submit</button>
+
+        <button class="mt-4 p-2 bg-green-500 text-white rounded" onclick="skipFile()">Skip</button>
     </div>
 
     <script>
@@ -107,18 +109,29 @@
         }
 
         function assignTag() {
-            let selectedWordDiv = document.querySelector('.word.selected');
-            if (!selectedWordDiv) {
-                alert("Select a word first!");
-                return;
-            }
-            let selectedTag = document.getElementById('tagSelector').value;
-            let sentenceIndex = selectedWordDiv.dataset.sentenceIndex;
-            let wordIndex = selectedWordDiv.dataset.wordIndex;
-            allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
-            selectedWordDiv.style.background = "#2d3748";
-            selectedWordDiv.style.color = "white";
-        }
+    let selectedWordDiv = document.querySelector('.word.selected');
+    if (!selectedWordDiv) {
+        alert("Select a word first!");
+        return;
+    }
+    let selectedTag = document.getElementById('tagSelector').value;
+    let sentenceIndex = selectedWordDiv.dataset.sentenceIndex;
+    let wordIndex = selectedWordDiv.dataset.wordIndex;
+    allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
+    console.log(allTagData);
+    
+    // Color mapping for tags
+    const tagColors = {
+        'place': 'blue',
+        'location': 'green',
+        'O': '#edf2f7', // default color for untagged words
+        // Add more tags and colors as needed
+    };
+
+    // Set background and text color based on the tag
+    selectedWordDiv.style.backgroundColor = tagColors[selectedTag] || 'lightblue'; // Default to light gray
+    selectedWordDiv.style.color = selectedTag === 'O' ? '#2d3748' : 'white'; // Black text for untagged words, white for others
+}
 
         function submitFile() {
             let formattedTagData = allTagData.map(sentenceData => {
@@ -144,6 +157,31 @@
                 location.reload();
             });
         }
+
+        function skipFile() {
+            const currentFileName = document.getElementById('currentFileName').innerText;
+
+            fetch(`/skip_file/?currentFileName=${encodeURIComponent(currentFileName)}`, {
+                method: 'GET',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update the lines array and current file
+                        lines = data.paragraph.split('.');
+                        fileName = data.filename;
+                        displayAllLines();
+                        document.getElementById('currentFileName').innerText = data.filename;
+                    } else {
+                        alert("no more files");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error skipping file:", error);
+                    document.getElementById('paraContent').innerText = "Failed to skip file.";
+                });
+        }
+
     </script>
 </body>
 </html>

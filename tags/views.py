@@ -11,6 +11,8 @@ from django.core.files.storage import default_storage
 from django.conf import settings
 from django.http import JsonResponse
 
+import pandas as pd
+
 @login_required(login_url='')
 def home(request):
     tag_manager = TagManager.get_instance()
@@ -115,6 +117,38 @@ def submit_file(request):
         body = json.loads(request.body)
         filename = body.get('filename')
 
+        data = json.loads(request.body)
+
+        filename = data.get("filename", "default.xlsx")
+        annotations = data.get("data", [])
+
+        results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'results')
+        os.makedirs(results_dir, exist_ok=True)  # Ensure directory exists
+
+        file_path = os.path.join(results_dir, "annotations.xlsx")
+
+        # Convert annotations to DataFrame
+        records = []
+        for sentence in annotations:
+            print(sentence)
+            sentence_number = sentence.get("sentence_number", "")
+            for word_data,tags in sentence.get("annotations", {}).items():
+                print(word_data)
+                records.append({
+                    "Sentence Number": sentence_number,
+                    "Word": word_data[0:],
+                    "Tag": tags[0:]
+                })
+
+        df = pd.DataFrame(records)
+
+        # Append or create the file
+        if os.path.exists(file_path):
+            existing_df = pd.read_excel(file_path)
+            df = pd.concat([existing_df, df], ignore_index=True)
+
+        df.to_excel(file_path, index=False)
+
         if not filename:
             return JsonResponse({"status": "error", "message": "Filename is required."})
 
@@ -182,6 +216,10 @@ def get_paragraph(request):
     return JsonResponse({"status": "success", "paragraph": content, "filename": next_file})
 
 def skip_file(request):
+    # Ensure session variable exists
+    if 'skipped_files' not in request.session:
+        request.session['skipped_files'] = []
+
     # Path to text files and picked files JSON
     text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
     picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
@@ -197,16 +235,23 @@ def skip_file(request):
 
     # Parse the current filename from the frontend
     current_file = request.GET.get('currentFileName', None)
+    
+    if current_file and current_file not in request.session['skipped_files']:
+        request.session['skipped_files'].append(current_file)
+        request.session.modified = True
 
     # List all text files in the directory
     all_text_files = [f for f in os.listdir(text_files_dir) if f.endswith('.txt')]
 
-    # Find files not yet picked and exclude the current file
-    remaining_files = [f for f in all_text_files if f not in picked_files and f != current_file]
+    # Find files not yet picked or skipped
+    remaining_files = [f for f in all_text_files if f not in picked_files and f not in request.session['skipped_files']]
 
     # Handle case when no files are left
     if not remaining_files:
-        return JsonResponse({"status": "error", "message": "No more files available to skip."})
+        request.session['skipped_files'] = []  # Clear session variable
+        request.session.modified = True
+        return JsonResponse({"status": "error", "message": "Last file reached."})
+
 
     # Pick the next file
     next_file = remaining_files[0]
@@ -217,6 +262,8 @@ def skip_file(request):
         content = file.read()
 
     return JsonResponse({"status": "success", "paragraph": content, "filename": next_file})
+
+
 
 def reset_picked_files(request):
     picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
