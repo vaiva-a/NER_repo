@@ -34,12 +34,29 @@
             background: #4299e1;
             color: white;
         }
+        #sentencesContainer {
+            max-height: 300px;
+            /* Adjust height as needed */
+            overflow-y: auto;
+            /* Enable vertical scrolling */
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        #sentencesContainer {
+            max-height: 300px;
+            /* Adjust height as needed */
+            overflow-y: auto;
+            /* Enable vertical scrolling */
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2 class="text-xl font-bold mb-4">Tag Annotator</h2>
-        <div id="sentencesContainer" class="p-4 border rounded-lg bg-white shadow-md"></div>
+        <div id="sentencesContainer" class="p-4 border rounded-lg bg-white shadow-md"
+            style="max-height: 300px; overflow-y: auto;"></div>
         <div id="currentFileName" class="text-sm text-gray-500 mt-2"></div>
 
         <select id="tagSelector" class="mt-4 p-2 border rounded">
