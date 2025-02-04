@@ -38,7 +38,7 @@
 </head>
 <body>
     <div class="container">
-        <h2 class="text-xl font-bold mb-4">Tag Manager</h2>
+        <h2 class="text-xl font-bold mb-4">Tag Annotator</h2>
         <div id="sentencesContainer" class="p-4 border rounded-lg bg-white shadow-md"></div>
         <div id="currentFileName" class="text-sm text-gray-500 mt-2"></div>
 
@@ -122,8 +122,10 @@
     
     // Color mapping for tags
     const tagColors = {
-        'place': 'blue',
+        'person': 'blue',
         'location': 'green',
+        'object':'orange',
+        'building':'brown',
         'O': '#edf2f7', // default color for untagged words
         // Add more tags and colors as needed
     };

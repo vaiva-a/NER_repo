@@ -34,4 +34,7 @@ urlpatterns = [
      path('skip_file/', views.skip_file, name='skip_file'),
      path('add_annotator/', views.add_annotator, name='add_annotator'),
       path('upload_file/', views.upload_file, name='upload_file'),
+      path('list_results/', views.list_result_files, name='list_results'),
+    path('download_result/', views.download_result_file, name='download_result'),
+    path('delete_result/', views.delete_result_file, name='delete_result'),
 ]

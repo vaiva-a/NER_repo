@@ -58,6 +58,43 @@
             border-color: #007bff;
             background-color: #f0f8ff;
         }
+        .result-files-container {
+    margin-top: 30px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.result-files-container ul {
+    list-style: none;
+    padding: 0;
+}
+
+.result-files-container li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.result-files-container button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+}
+
+.result-files-container button.delete-btn {
+    background-color: #dc3545;
+}
+
 
         #file-input {
             display: none;
@@ -232,6 +269,11 @@
             <p>upload file / drag and drop here</p>
             <input type="file" id="file-input">
         </div>
+        <div class="result-files-container">
+            <h3>Result Files</h3>
+            <ul id="result-files-list"></ul>
+        </div>
+        
     </div>
 
     <script>
@@ -312,13 +354,6 @@
                 alert('Tag name cannot be empty!');
             }
         }
-
-
-        // function addUser() {
-        //     // Empty function for now
-        //     console.log('Add user clicked');
-        // }
-
         function clearTags() {
             fetch('/clear_tags/', {
                 method: 'POST',
@@ -373,6 +408,66 @@
                     alert("File upload failed.");
                 });
         }
+        document.addEventListener('DOMContentLoaded', fetchResultFiles);
+
+function fetchResultFiles() {
+    fetch('/list_results/')
+        .then(response => response.json())
+        .then(data => {
+            const resultList = document.getElementById('result-files-list');
+            resultList.innerHTML = ''; // Clear existing list
+
+            data.files.forEach(file => {
+                const listItem = document.createElement('li');
+                listItem.textContent = file;
+
+                const downloadButton = document.createElement('button');
+                downloadButton.textContent = 'Download';
+                downloadButton.onclick = () => downloadFile(file);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.classList.add('delete-btn');
+                deleteButton.onclick = () => deleteFile(file);
+
+                listItem.appendChild(downloadButton);
+                listItem.appendChild(deleteButton);
+
+                resultList.appendChild(listItem);
+            });
+        })
+        .catch(error => console.error('Error fetching files:', error));
+}
+
+function downloadFile(filename) {
+    window.location.href = `/download_result/?filename=${encodeURIComponent(filename)}`;
+}
+
+function deleteFile(filename) {
+    if (confirm(`Are you sure you want to delete ${filename}?`)) {
+        fetch('/delete_result/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ filename: filename }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('File deleted successfully!');
+                fetchResultFiles(); // Refresh the file list
+            } else {
+                alert('Error deleting file!');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting file:', error);
+            alert('Failed to delete file.');
+        });
+    }
+}
+
     </script>
     <script>
         // function handleFileUpload(file) {

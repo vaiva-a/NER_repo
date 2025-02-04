@@ -9,7 +9,7 @@ from .models import TagManager,Admin,Annotators
 import os
 from django.core.files.storage import default_storage
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, HttpResponseBadRequest
 
 import pandas as pd
 
@@ -342,3 +342,44 @@ def upload_file(request):
         return JsonResponse({'status': 'success', 'message': 'File uploaded successfully!'})
 
     return JsonResponse({'status': 'error', 'message': 'No file provided!'}, status=400)
+
+RESULTS_DIR = os.path.join(settings.BASE_DIR, 'tagproject','results')
+
+def list_result_files(request):
+    if request.method == 'GET':
+        try:
+            print("hello")
+            files = [f for f in os.listdir(RESULTS_DIR) if f.endswith('.xlsx')]
+            print(files)
+            print("after")
+            return JsonResponse({'files': files})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+def download_result_file(request):
+    filename = request.GET.get('filename')
+    if not filename:
+        return HttpResponseBadRequest('Missing filename')
+
+    file_path = os.path.join(RESULTS_DIR, filename)
+    if os.path.exists(file_path):
+        return FileResponse(open(file_path, 'rb'), as_attachment=True)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'File not found'})
+
+@csrf_exempt
+def delete_result_file(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        filename = data.get('filename')
+        if not filename:
+            return JsonResponse({'status': 'error', 'message': 'Filename is required'})
+
+        file_path = os.path.join(RESULTS_DIR, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return JsonResponse({'status': 'success', 'message': 'File deleted successfully'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'File not found'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
