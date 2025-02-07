@@ -64,11 +64,30 @@
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-height: 400px;       /* Limit the container height */
+    overflow-y: auto;        /* Enable vertical scrolling */
+    overflow-x: hidden;      /* Hide horizontal scroll if content overflows */
+    scroll-behavior: smooth; /* Smooth scrolling */
+}
+
+/* Style for the scrollbar (optional) */
+.result-files-container::-webkit-scrollbar {
+    width: 8px;              /* Scrollbar width */
+}
+
+.result-files-container::-webkit-scrollbar-thumb {
+    background-color: #ccc;  /* Scrollbar thumb color */
+    border-radius: 4px;
+}
+
+.result-files-container::-webkit-scrollbar-thumb:hover {
+    background-color: #888;  /* Hover effect on scrollbar */
 }
 
 .result-files-container ul {
     list-style: none;
     padding: 0;
+    margin: 0;               /* Remove extra margin for better alignment */
 }
 
 .result-files-container li {
@@ -76,9 +95,14 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
+    max-height: 200px;       /* Reduced height for earlier scrolling */
+    overflow-y: auto;        /* Enable vertical scrolling */
+    overflow-x: hidden;      /* Hide horizontal scroll if content overflows */
+    scroll-behavior: smooth;       
     padding: 10px;
     background-color: #f9f9f9;
     border-radius: 5px;
+    word-wrap: break-word;    /* Handle long file names */
 }
 
 .result-files-container button {
@@ -89,11 +113,21 @@
     cursor: pointer;
     background-color: #007bff;
     color: white;
+    transition: background-color 0.3s ease; /* Smooth button hover effect */
+}
+
+.result-files-container button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
 }
 
 .result-files-container button.delete-btn {
     background-color: #dc3545;
 }
+
+.result-files-container button.delete-btn:hover {
+    background-color: #b52a37; /* Darker red on hover */
+}
+
 
 
         #file-input {
@@ -225,6 +259,38 @@
             color: white;
             border: none;
         }
+        .tag-container {
+    margin-top: 16px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background-color: #f9f9f9;
+}
+
+.tag {
+    padding: 8px 16px;
+    background-color: #e0e0e0;
+    color: #333;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.tag:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.selected-tag {
+    margin-top: 8px;
+    color: #007bff;
+    font-weight: bold;
+}
+
+        
     </style>
 </head>
 
@@ -273,6 +339,15 @@
             <h3>Result Files</h3>
             <ul id="result-files-list"></ul>
         </div>
+        <h3>Tags</h3>
+        <div id="tagSelector" class="tag-container">
+            {% for tag in tags %}
+            <div class="tag" onclick="selectTag('{{ tag }}')">{{ tag }}</div>
+            {% endfor %}
+        </div>
+        
+        <p id="selectedTag" class="selected-tag"></p>
+        
         
     </div>
 
