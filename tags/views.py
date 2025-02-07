@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate,login
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 import json
 from .models import TagManager,Admin,Annotators
@@ -16,8 +17,10 @@ import pandas as pd
 @login_required(login_url='')
 def home(request):
     tag_manager = TagManager.get_instance()
+
     return render(request, 'tags/home.html', {'tags': tag_manager.tags})
 
+@staff_member_required
 @login_required(login_url='')
 def adminhome(request):
     tag_manager = TagManager.get_instance()
@@ -281,49 +284,30 @@ def reset_picked_files(request):
 
 def login_page(request):
     if request.method == "POST":
-        # admin_user = Admin.objects.create(username="admin", password="admin")
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-       
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
         user = authenticate(request, username=username, password=password)
-        # Check for admin login
-        try:
-            
-            print("here1")
-            admin_user = Admin.objects.get(username=username, password=password)
-            print(admin_user,user)
-            if admin_user and user is not None:
-                print("Admin authenticated")
-                login(request,user)
-                return redirect('/adminhome')  # Redirect to admin home
-                
-            else:
-                return render(request, 'registration/login.html')
 
-        except Admin.DoesNotExist:
-            pass  # Proceed to user login check if not admin
+        if user is not None:
+            login(request, user)
+            print(f"User {user.username} authenticated successfully.")
 
-        # Check for annotator login
-        try:
-            print("here")
-            print(username,password)
-            annotator_user = Annotators.objects.get(username=username, password=password)
-            print(annotator_user,user)
-            if annotator_user and user is not None:
-                print("Annotator authenticated")
-                login(request,user)
-                return redirect('/home')  # Redirect to user home
-            else:
-                print("doesnt exist")
-                return render(request, 'registration/login.html')
-        except Annotators.DoesNotExist:
-            pass
+            # Check if the user is an admin (Django built-in system)
+            if user.is_staff or user.is_superuser:
+                print("Redirecting to admin home")
+                return redirect("/adminhome")
 
-        # If neither admin nor user credentials match
-        err_msg = {"msg": "Username or password is wrong, please try again"}
-        return render(request, 'registration/login.html', err_msg)
+            # Otherwise, redirect to user home
+            print("Redirecting to user home")
+            return redirect("/home")
 
-    return render(request, 'registration/login.html')
+        else:
+            print("Invalid credentials")
+            return render(request, "registration/login.html", {"msg": "Invalid username or password"})
+
+    return render(request, "registration/login.html")
+
         
 UPLOAD_DIR = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
 
