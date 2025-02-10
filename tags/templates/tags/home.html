@@ -195,10 +195,10 @@
             <div id="sentencesContainer" class="p-4 border rounded-lg bg-white shadow-md"
                 style="max-height: 600px; overflow-y: auto;"></div>
             <div id="currentFileName" class="text-sm text-gray-500 mt-2"></div>
-            <div class="stats-container">
+            <!-- <div class="stats-container">
                 <h3 class="text-lg font-bold">Top 5 Tags</h3>
                 <ul id="topTags" class="mt-4"></ul>
-            </div>
+            </div> -->
             <button id="assignTagButton" onclick="assignTag()" class="mt-4 p-2 bg-blue-500 text-white rounded">Assign
                 Tag</button>
             <button onclick="submitFile()" class="mt-4 p-2 bg-green-500 text-white rounded">Submit</button>
@@ -216,6 +216,7 @@
         let allTagData = [];
         let tagUsageCount = {}; // Store tag usage counts
         const tag1 = "{{ tags|safe}}"; //might get slow..change to api fetch
+        let tagShortcuts = {};
         const tags = JSON.parse(tag1.replace(/'/g, '"'));
         console.log(tags);
 
@@ -335,24 +336,37 @@
         function updateTopTags() {
             let topTagsDiv = document.getElementById("topTagsList");
             topTagsDiv.innerHTML = "";
-
+            let index = 0;
             // Sort tags by usage and get the top 5
             let topTags = Object.entries(tagUsageCount)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5)
                 .map(tag => tag[0]);
-
             // Create buttons for top tags
             topTags.forEach(tag => {
                 let tagDiv = document.createElement("div");
-                tagDiv.innerText = tag;
+                tagDiv.innerText = (index + 1) + " - " + tag;
                 tagDiv.classList.add("word");
+
                 tagDiv.onclick = () => {
                     document.getElementById("tagSearch").value = tag; // Update tagSearch
                 };
+                tagShortcuts[index + 1] = tag;
+                index++;
                 topTagsDiv.appendChild(tagDiv);
+                console.log(tagShortcuts);
             });
         }
+
+
+        document.addEventListener("keydown", function (event) {
+            let num = event.key;
+            if (num >= "1" && num <= "5" && tagShortcuts[num]) {
+                document.getElementById("tagSearch").value = tagShortcuts[num];
+                assignTag();
+            }
+            console.log(tagShortcuts[num]);
+        });
 
         function submitFile() {
             let formattedTagData = allTagData.map(sentenceData => {
