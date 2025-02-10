@@ -195,10 +195,18 @@
             <div id="sentencesContainer" class="p-4 border rounded-lg bg-white shadow-md"
                 style="max-height: 600px; overflow-y: auto;"></div>
             <div id="currentFileName" class="text-sm text-gray-500 mt-2"></div>
+            <div class="stats-container">
+                <h3 class="text-lg font-bold">Top 5 Tags</h3>
+                <ul id="topTags" class="mt-4"></ul>
+            </div>
             <button id="assignTagButton" onclick="assignTag()" class="mt-4 p-2 bg-blue-500 text-white rounded">Assign
                 Tag</button>
             <button onclick="submitFile()" class="mt-4 p-2 bg-green-500 text-white rounded">Submit</button>
             <button class="mt-4 p-2 bg-green-500 text-white rounded" onclick="skipFile()">Skip</button>
+        </div>
+        <div class="tag-container">
+            <h3 class="text-lg font-bold">Top 5 Tags</h3>
+            <div id="topTagsList" class="tag-list"></div>
         </div>
     </div>
 
@@ -206,6 +214,7 @@
         let lines = [];
         let fileName = "";
         let allTagData = [];
+        let tagUsageCount = {}; // Store tag usage counts
         const tag1 = "{{ tags|safe}}"; //might get slow..change to api fetch
         const tags = JSON.parse(tag1.replace(/'/g, '"'));
         console.log(tags);
@@ -318,8 +327,32 @@
 
             selectedWordDiv.style.backgroundColor = tagColors[selectedTag] || 'lightblue';
             selectedWordDiv.style.color = selectedTag === 'None' ? '#2d3748' : 'white';
+
+            tagUsageCount[selectedTag] = (tagUsageCount[selectedTag] || 0) + 1;
+            updateTopTags();
         }
 
+        function updateTopTags() {
+            let topTagsDiv = document.getElementById("topTagsList");
+            topTagsDiv.innerHTML = "";
+
+            // Sort tags by usage and get the top 5
+            let topTags = Object.entries(tagUsageCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(tag => tag[0]);
+
+            // Create buttons for top tags
+            topTags.forEach(tag => {
+                let tagDiv = document.createElement("div");
+                tagDiv.innerText = tag;
+                tagDiv.classList.add("word");
+                tagDiv.onclick = () => {
+                    document.getElementById("tagSearch").value = tag; // Update tagSearch
+                };
+                topTagsDiv.appendChild(tagDiv);
+            });
+        }
 
         function submitFile() {
             let formattedTagData = allTagData.map(sentenceData => {

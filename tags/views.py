@@ -37,8 +37,8 @@ def add_tag(request):
             tag_manager.save()
             return JsonResponse({'status': 'success', 'tags': tag_manager.tags})
     return JsonResponse({'status': 'error'})
-# Create your views here.
 
+# Create your views here.
 @csrf_exempt
 def clear_tags(request):
     if request.method == 'POST':
