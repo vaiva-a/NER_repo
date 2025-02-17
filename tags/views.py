@@ -58,6 +58,30 @@ def clear_tags(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
 @csrf_exempt
+def delete_tag(request):
+    if request.method == 'POST':
+        try:
+            tag_to_delete = request.POST.get('tag')
+            if not tag_to_delete:
+                return JsonResponse({'status': 'error', 'message': 'No tag specified.'})
+
+            # Get or create the TagManager instance
+            tag_manager = TagManager.get_instance()
+
+            # Check if the tag exists
+            if tag_to_delete in tag_manager.tags:
+                tag_manager.tags.remove(tag_to_delete)
+                tag_manager.save()
+                return JsonResponse({'status': 'success', 'message': f'Tag "{tag_to_delete}" deleted successfully.'})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Tag not found.'})
+        except Exception as e:
+            print(e)
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+
+@csrf_exempt
 def add_annotator(request):
     if request.method == 'POST':
         try:
