@@ -4,420 +4,47 @@
 
 <head>
     <title>Tag Manager</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f0f4f8;
-            color: #1a202c;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05),
-                0 10px 15px rgba(0, 0, 0, 0.03);
-            display: flex;
-            gap: 2rem;
-        }
-
-        .tag-container {
-            width: 250px;
-            /* Made slightly narrower */
-            background: #ffffff;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-        }
-
-        .tag-list {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            height: 55vh;
-            /* Reduced height */
-            overflow-y: auto;
-            padding: 0.75rem;
-            margin-top: 1rem;
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e0 #f8fafc;
-        }
-
-        .tag-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .tag-list::-webkit-scrollbar-track {
-            background: #f8fafc;
-        }
-
-        .tag-list::-webkit-scrollbar-thumb {
-            background-color: #cbd5e0;
-            border-radius: 3px;
-        }
-
-        .tag-list div {
-            padding: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 0.5rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .tag-list div:hover {
-            background: #edf2f7;
-            transform: translateX(4px);
-        }
-
-        #tagSearch {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-            transition: all 0.2s ease;
-        }
-
-        #tagSearch:focus {
-            outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
-        }
-
-        .content-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #sentencesContainer {
-            flex-grow: 1;
-            background: #ffffff;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            height: 65vh;
-            /* Slightly higher than tag list */
-            overflow-y: auto;
-            border: 1px solid #e2e8f0;
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e0 #ffffff;
-            margin-bottom: 1rem;
-        }
-
-        .word {
-            display: inline-block;
-            background: #edf2f7;
-            padding: 0.5rem 0.75rem;
-            margin: 0.25rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            font-size: 0.95rem;
-            border: 1px solid transparent;
-        }
-
-        .word:hover {
-            background: #e2e8f0;
-            transform: translateY(-1px);
-        }
-
-        .word.selected {
-            background: #4299e1;
-            color: white;
-            border: 1px solid #3182ce;
-            box-shadow: 0 2px 4px rgba(66, 153, 225, 0.2);
-        }
-
-        button {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            margin-right: 1rem;
-        }
-
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .mb-4 {
-            margin-bottom: 1rem;
-        }
-
-        #currentFileName {
-            color: #718096;
-            font-size: 0.875rem;
-            margin: 1rem 0;
-        }
-
-        .controls {
-            margin-top: 1rem;
-            display: flex;
-            gap: 1rem;
-            padding-top: 0.5rem;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .assign-btn {
-            background: #4299e1;
-            color: white;
-        }
-
-        .submit-btn {
-            background: #48bb78;
-            color: white;
-        }
-
-        .skip-btn {
-            background: #ed8936;
-            color: white;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
 </head>
 
 <body>
+    <script>
+        const tag1 = "{{ tags|safe }}"; //might get slow..change to api fetch
+    </script>
+    <script src="{% static 'js/home.js' %}"></script>
     <div class="container">
         <div class="tag-container">
             <h3 class="text-lg font-bold">Tags</h3>
 
             <input type="text" id="tagSearch" class="p-2 border rounded w-full" placeholder="Search tags..."
-                onkeyup="filterTags()">
+                onkeyup="filterTags()" />
             <div class="tag-list" id="tagList"></div>
         </div>
         <div>
             <h2 class="text-xl font-bold mb-4">Tag Annotator</h2>
             <div id="sentencesContainer" class="p-4 border rounded-lg bg-white shadow-md"
-                style="max-height: 600px; overflow-y: auto;"></div>
+                style="max-height: 600px; overflow-y: auto"></div>
             <div id="currentFileName" class="text-sm text-gray-500 mt-2"></div>
             <!-- <div class="stats-container">
                 <h3 class="text-lg font-bold">Top 5 Tags</h3>
                 <ul id="topTags" class="mt-4"></ul>
             </div> -->
-            <button id="assignTagButton" onclick="assignTag()" class="mt-4 p-2 bg-blue-500 text-white rounded">Assign
-                Tag</button>
-            <button onclick="submitFile()" class="mt-4 p-2 bg-green-500 text-white rounded">Submit</button>
-            <button class="mt-4 p-2 bg-green-500 text-white rounded" onclick="skipFile()">Skip</button>
+            <button id="assignTagButton" onclick="assignTag()" class="mt-4 p-2 bg-blue-500 text-white rounded">
+                Assign Tag
+            </button>
+            <button onclick="submitFile()" class="mt-4 p-2 bg-green-500 text-white rounded">
+                Submit
+            </button>
+            <button class="mt-4 p-2 bg-green-500 text-white rounded" onclick="skipFile()">
+                Skip
+            </button>
         </div>
         <div class="tag-container">
             <h3 class="text-lg font-bold">Top 5 Tags</h3>
             <div id="topTagsList" class="tag-list"></div>
         </div>
     </div>
-
-    <script>
-        let lines = [];
-        let fileName = "";
-        let allTagData = [];
-        let tagUsageCount = {}; // Store tag usage counts
-        const tag1 = "{{ tags|safe}}"; //might get slow..change to api fetch
-        let tagShortcuts = {};
-        const tags = JSON.parse(tag1.replace(/'/g, '"'));
-        console.log(tags);
-
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('/get_paragraph/')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        lines = data.paragraph.split('.');
-                        fileName = data.filename;
-                        displayAllLines();
-                        document.getElementById('currentFileName').innerText = data.filename;
-                    }
-                });
-            populateTagList();
-        });
-
-        document.addEventListener('keydown', (event) => {
-            if (event.ctrlKey && event.key === 'a') {
-                event.preventDefault();
-                assignTag();
-            }
-        });
-
-        function populateTagList() {
-            let tagListDiv = document.getElementById("tagList");
-            tagListDiv.innerHTML = "";
-
-            tags.forEach(tag => {
-                let tagDiv = document.createElement("div");
-                console.log(tag);
-                tagDiv.innerText = tag;
-                tagDiv.value = tag;
-                tagDiv.onclick = () => selectTag(tag);
-                tagListDiv.appendChild(tagDiv);
-            });
-        }
-
-        function filterTags() {
-            let query = document.getElementById("tagSearch").value.toLowerCase();
-            let tagListDiv = document.getElementById("tagList");
-            let tagItems = tagListDiv.children;
-            for (let item of tagItems) {
-                item.style.display = item.innerText.toLowerCase().includes(query) ? "block" : "none";
-            }
-        }
-
-        function selectTag(tag) {
-            document.getElementById("tagSearch").value = tag;
-        }
-
-        function displayAllLines() {
-            let sentencesContainer = document.getElementById('sentencesContainer');
-            sentencesContainer.innerHTML = "";
-
-            lines.forEach((line, index) => {
-                let words = line.trim().split(' ');
-                let tagData = {};
-                let sentenceDiv = document.createElement('div');
-                sentenceDiv.className = 'mb-4 p-2 border rounded bg-gray-100';
-                sentenceDiv.dataset.index = index;
-
-                words.forEach((word, idx) => {
-                    let cleanWord = word.replace(/[^a-zA-Z0-9]/g, '');
-                    if (cleanWord) {
-                        tagData[idx] = { word: cleanWord, tag: "O" };
-                        let wordDiv = document.createElement('div');
-                        wordDiv.className = 'word';
-                        wordDiv.innerText = word;
-                        wordDiv.onclick = () => selectWord(wordDiv, index, idx);
-                        sentenceDiv.appendChild(wordDiv);
-                    }
-                });
-
-                allTagData[index] = { sentence_number: index, annotations: tagData };
-                sentencesContainer.appendChild(sentenceDiv);
-            });
-        }
-
-        function selectWord(wordDiv, sentenceIndex, wordIndex) {
-            document.querySelectorAll('.word').forEach(w => w.classList.remove('selected'));
-            wordDiv.classList.add('selected');
-            wordDiv.dataset.sentenceIndex = sentenceIndex;
-            wordDiv.dataset.wordIndex = wordIndex;
-        }
-
-        function assignTag() {
-            let selectedWordDiv = document.querySelector('.word.selected');
-            if (!selectedWordDiv) {
-                alert("Select a word first!");
-                return;
-            }
-            let selectedTag = document.getElementById('tagSearch').value;
-            if (!tags.includes(selectedTag)) {
-                alert("Invalid tag!");
-                return;
-            }
-            let sentenceIndex = selectedWordDiv.dataset.sentenceIndex;
-            let wordIndex = selectedWordDiv.dataset.wordIndex;
-            allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
-
-            const tagColors = {
-                'person': 'blue',
-                'location': 'green',
-                'object': 'orange',
-                'building': 'brown',
-                'None': '#edf2f7',
-            };
-
-            selectedWordDiv.style.backgroundColor = tagColors[selectedTag] || 'lightblue';
-            selectedWordDiv.style.color = selectedTag === 'None' ? '#2d3748' : 'white';
-
-            tagUsageCount[selectedTag] = (tagUsageCount[selectedTag] || 0) + 1;
-            updateTopTags();
-        }
-
-        function updateTopTags() {
-            let topTagsDiv = document.getElementById("topTagsList");
-            topTagsDiv.innerHTML = "";
-            let index = 0;
-            // Sort tags by usage and get the top 5
-            let topTags = Object.entries(tagUsageCount)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(tag => tag[0]);
-            // Create buttons for top tags
-            topTags.forEach(tag => {
-                let tagDiv = document.createElement("div");
-                tagDiv.innerText = (index + 1) + " - " + tag;
-                tagDiv.classList.add("word");
-
-                tagDiv.onclick = () => {
-                    document.getElementById("tagSearch").value = tag; // Update tagSearch
-                };
-                tagShortcuts[index + 1] = tag;
-                index++;
-                topTagsDiv.appendChild(tagDiv);
-                console.log(tagShortcuts);
-            });
-        }
-
-
-        document.addEventListener("keydown", function (event) {
-            let num = event.key;
-            if (num >= "1" && num <= "5" && tagShortcuts[num]) {
-                document.getElementById("tagSearch").value = tagShortcuts[num];
-                assignTag();
-            }
-            console.log(tagShortcuts[num]);
-        });
-
-        function submitFile() {
-            let formattedTagData = allTagData.map(sentenceData => {
-                let annotations = {};
-                Object.values(sentenceData.annotations).forEach(({ word, tag }) => {
-                    annotations[word] = tag;
-                });
-                return { sentence_number: sentenceData.sentence_number, annotations };
-            });
-
-            let payload = {
-                filename: fileName,
-                data: formattedTagData
-            };
-            fetch('/submit_file/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message);
-                    location.reload();
-                });
-        }
-
-        function skipFile() {
-            const currentFileName = document.getElementById('currentFileName').innerText;
-
-            fetch(`/skip_file/?currentFileName=${encodeURIComponent(currentFileName)}`, {
-                method: 'GET',
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Update the lines array and current file
-                        lines = data.paragraph.split('.');
-                        fileName = data.filename;
-                        displayAllLines();
-                        document.getElementById('currentFileName').innerText = data.filename;
-                    } else {
-                        alert("no more files");
-                    }
-                })
-                .catch(error => {
-                    console.error("Error skipping file:", error);
-                    document.getElementById('paraContent').innerText = "Failed to skip file.";
-                });
-        }
-
-    </script>
 </body>
 
 </html>
