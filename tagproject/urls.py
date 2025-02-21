@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.login_page, name='login'),
+    path("logout/", views.logout_view, name="logout"),
     path('home/', views.home, name='home'),
     path('adminhome/', views.adminhome, name='adminhome'),
     path('add_tag/', views.add_tag, name='add_tag'),
@@ -35,7 +36,9 @@ urlpatterns = [
     path('add_annotator/', views.add_annotator, name='add_annotator'),
     path('upload_file/', views.upload_file, name='upload_file'),
     path('list_results/', views.list_result_files, name='list_results'),
+    path('list_uploads/', views.list_uploaded_files, name='list_uploads'),
     path('download_result/', views.download_result_file, name='download_result'),
     path('delete_result/', views.delete_result_file, name='delete_result'),
+    path('delete_upload/', views.delete_upload_file, name='delete_upload'),
     path('delete_tag/', views.delete_tag, name='delete_tag'),
 ]

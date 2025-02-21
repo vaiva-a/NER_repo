@@ -8,6 +8,20 @@
 </head>
 
 <body>
+  <nav class="navbar">
+    <div class="navbar-container">
+      <span class="logo">Admin Dashboard</span>
+      <ul class="nav-links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Users</a></li>
+        <li><a href="#">Tags</a></li>
+      </ul>
+      <form action="{% url 'logout' %}" method="post" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </nav>
   <div class="container">
     <div class="button-group">
       <button class="action-button" onclick="openAddUserDialog()">
@@ -19,6 +33,7 @@
       <button class="action-button" onclick="showAddTagDialog()">
         add tag
       </button>
+      
     </div>
     <div id="addTagDialog" class="dialog" style="display: none">
       <div class="dialog-content">
@@ -55,19 +70,28 @@
       <p>upload file / drag and drop here</p>
       <input type="file" id="file-input" />
     </div>
+
+    <div class="result-files-container">
+      <h3>Uploaded Files</h3>
+      <ul id="upload-files-list"></ul>
+    </div>
     <div class="result-files-container">
       <h3>Result Files</h3>
-      <ul id="result-files-list"></ul>
+      <ul id="result-files-list">
+        <div class="scroll-container"></div>
+      </ul>
     </div>
     <h3>Tags</h3>
+    <input type="text" id="tagSearch" placeholder="Search tags..." onkeyup="filterTags()" />
     <div id="tagSelector" class="tag-container">
       {% for tag in tags %}
       <div class="tag">
         <span onclick="selectTag('{{ tag }}')">{{ tag }}</span>
-        <span class="delete-tag" onclick="confirmDeleteTag('{{ tag }}')">❌</span>
+        <span class="delete-tag" onclick="confirmDeleteTag('{{ tag }}')">🗑️</span>
       </div>
       {% endfor %}
     </div>
+
 
     <p id="selectedTag" class="selected-tag"></p>
   </div>

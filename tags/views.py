@@ -1,23 +1,21 @@
 from django.shortcuts import render,redirect
 from django.http import JsonResponse
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
-import json
-from .models import TagManager,Admin,Annotators
-import os
+from .models import TagManager,Annotators
 from django.core.files.storage import default_storage
 from django.conf import settings
 from django.http import JsonResponse, FileResponse, HttpResponseBadRequest
-
+import json
+import os
 import pandas as pd
 
 @login_required(login_url='')
 def home(request):
     tag_manager = TagManager.get_instance()
-
     return render(request, 'tags/home.html', {'tags': tag_manager.tags})
 
 @staff_member_required
@@ -57,6 +55,7 @@ def clear_tags(request):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
+#deletes individual tag
 @csrf_exempt
 def delete_tag(request):
     if request.method == 'POST':
@@ -109,13 +108,6 @@ def add_annotator(request):
 
             user = User.objects.create_user(username=username,email=username,password=password)
             Annotators.objects.create(ID=next_id,username=username, password=password)
-            # Create new annotator
-            # annotator = Annotators(
-            #     ID=next_id,
-            #     username=username,
-            #     password=password  # Note: Consider using password hashing
-            # )
-            # annotator.save()
 
             return JsonResponse({
                 'status': 'success',
@@ -235,11 +227,6 @@ def get_paragraph(request):
     with open(file_path, 'r') as file:
         content = file.read()
 
-    # Add the picked file to the list and update the JSON file
-    # picked_files.append(next_file)
-    # with open(picked_files_path, 'w') as f:
-    #     json.dump(picked_files, f)
-
     return JsonResponse({"status": "success", "paragraph": content, "filename": next_file})
 
 def skip_file(request):
@@ -290,8 +277,6 @@ def skip_file(request):
 
     return JsonResponse({"status": "success", "paragraph": content, "filename": next_file})
 
-
-
 def reset_picked_files(request):
     picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
 
@@ -332,9 +317,11 @@ def login_page(request):
 
     return render(request, "registration/login.html")
 
-        
-UPLOAD_DIR = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
+def logout_view(request):
+    logout(request)
+    return redirect("/")  
 
+UPLOAD_DIR = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
 os.makedirs(UPLOAD_DIR, exist_ok=True)  # Ensure directory exists
 
 @csrf_exempt
@@ -352,14 +339,21 @@ def upload_file(request):
     return JsonResponse({'status': 'error', 'message': 'No file provided!'}, status=400)
 
 RESULTS_DIR = os.path.join(settings.BASE_DIR, 'tagproject','results')
-
+UPLOAD_DIR = os.path.join(settings.BASE_DIR, 'tagproject','text_files')
 def list_result_files(request):
     if request.method == 'GET':
         try:
-            print("hello")
             files = [f for f in os.listdir(RESULTS_DIR) if f.endswith('.xlsx')]
             print(files)
-            print("after")
+            return JsonResponse({'files': files})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+        
+def list_uploaded_files(request):
+    if request.method == 'GET':
+        try:
+            files = [f for f in os.listdir(UPLOAD_DIR) if f.endswith('.txt')]
+            print("Printing uploaded files",files)
             return JsonResponse({'files': files})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
@@ -384,6 +378,23 @@ def delete_result_file(request):
             return JsonResponse({'status': 'error', 'message': 'Filename is required'})
 
         file_path = os.path.join(RESULTS_DIR, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return JsonResponse({'status': 'success', 'message': 'File deleted successfully'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'File not found'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+@csrf_exempt
+def delete_upload_file(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        filename = data.get('filename')
+        if not filename:
+            return JsonResponse({'status': 'error', 'message': 'Filename is required'})
+
+        file_path = os.path.join(UPLOAD_DIR, filename)
         if os.path.exists(file_path):
             os.remove(file_path)
             return JsonResponse({'status': 'success', 'message': 'File deleted successfully'})

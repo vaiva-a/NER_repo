@@ -69,7 +69,7 @@ function submitNewTag() {
                     console.log(a);
                     newTag.innerHTML = `
                   <span onclick="selectTag('${a}')">${a}</span>
-                  <span class="delete-tag" onclick="confirmDeleteTag('${a}')">❌</span>
+                  <span class="delete-tag" onclick="confirmDeleteTag('${a}')">🗑️</span>
               `;
                     let topTagsDiv = document.getElementById("tagSelector");
                     topTagsDiv.appendChild(newTag);
@@ -160,11 +160,11 @@ function fetchResultFiles() {
                 listItem.textContent = file;
 
                 const downloadButton = document.createElement("button");
-                downloadButton.textContent = "Download";
+                downloadButton.textContent = "Download \u21E9";
                 downloadButton.onclick = () => downloadFile(file);
 
                 const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Delete";
+                deleteButton.textContent = "Delete 🗑️";
                 deleteButton.classList.add("delete-btn");
                 deleteButton.onclick = () => deleteFile(file);
 
@@ -176,6 +176,31 @@ function fetchResultFiles() {
         })
         .catch((error) => console.error("Error fetching files:", error));
 }
+document.addEventListener("DOMContentLoaded", fetchUploadedFiles);
+function fetchUploadedFiles() {
+    fetch("/list_uploads/")
+        .then((response) => response.json())
+        .then((data) => {
+            const resultList = document.getElementById("upload-files-list");
+            resultList.innerHTML = ""; // Clear existing list
+
+            data.files.forEach((file) => {
+                const listItem = document.createElement("li");
+                listItem.textContent = file;
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete 🗑️";
+                deleteButton.classList.add("delete-btn");
+                deleteButton.onclick = () => deleteUploadFile(file);
+
+                listItem.appendChild(deleteButton);
+
+                resultList.appendChild(listItem);
+            });
+        })
+        .catch((error) => console.error("Error fetching files:", error));
+}
+
 
 function downloadFile(filename) {
     window.location.href = `/download_result/?filename=${encodeURIComponent(
@@ -207,6 +232,31 @@ function deleteFile(filename) {
             });
     }
 }
+function deleteUploadFile(filename) {
+    if (confirm(`Are you sure you want to delete ${filename}?`)) {
+        fetch("/delete_upload/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ filename: filename }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.status === "success") {
+                    alert("File deleted successfully!");
+                    fetchResultFiles(); // Refresh the file list
+                } else {
+                    alert("Error deleting file!");
+                }
+            })
+            .catch((error) => {
+                console.error("Error deleting file:", error);
+                alert("Failed to delete file.");
+            });
+    }
+}
+
 
 // function handleFileUpload(file) {
 //     const formData = new FormData();
@@ -311,4 +361,17 @@ function addTag() {
             }
         })
         .catch((error) => console.error("Error:", error));
+}
+function filterTags() {
+    let searchInput = document.getElementById("tagSearch").value.toLowerCase();
+    let tags = document.querySelectorAll("#tagSelector .tag");
+
+    tags.forEach(tag => {
+        let tagName = tag.querySelector("span").textContent.toLowerCase();
+        if (tagName.startsWith(searchInput)) {
+            tag.style.display = "flex"; // Show matching tags
+        } else {
+            tag.style.display = "none"; // Hide non-matching tags
+        }
+    });
 }
