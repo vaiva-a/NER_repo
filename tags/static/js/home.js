@@ -2,7 +2,7 @@ let lines = [];
 let fileName = "";
 let allTagData = [];
 let tagUsageCount = {}; // Store tag usage counts
-
+let autotaglist = {};
 let tagShortcuts = {};
 const tags = JSON.parse(tag1.replace(/'/g, '"'));
 console.log(tags);
@@ -15,6 +15,8 @@ document.addEventListener("DOMContentLoaded", () => {
         lines = data.paragraph.split(".");
         fileName = data.filename;
         displayAllLines();
+        console.log("here", data.taglist);
+        autotaglist = data.taglist;
         document.getElementById("currentFileName").innerText = data.filename;
       }
     });
@@ -76,11 +78,55 @@ function displayAllLines() {
         wordDiv.className = "word";
         wordDiv.innerText = word;
         wordDiv.onclick = () => selectWord(wordDiv, index, idx);
+
+        let tagDiv = document.createElement("div");
+        tagDiv.className = "tag";
+        tagDiv.innerText = "O";
+        wordDiv.appendChild(tagDiv); // Append tag inside word
+
         sentenceDiv.appendChild(wordDiv);
       }
     });
 
     allTagData[index] = { sentence_number: index, annotations: tagData };
+    sentencesContainer.appendChild(sentenceDiv);
+  });
+}
+
+function AutoTag() {
+  console.log("here")
+  let sentencesContainer = document.getElementById("sentencesContainer");
+  sentencesContainer.innerHTML = ""; // Clear previous content
+
+  Object.keys(autotaglist).forEach((sentenceIndex) => {
+    let sentenceData = autotaglist[sentenceIndex];
+    let sentenceDiv = document.createElement("div");
+    sentenceDiv.className = "mb-4 p-2 border rounded bg-gray-100";
+    sentenceDiv.dataset.index = sentenceIndex;
+
+    let tagData = {};
+
+    Object.keys(sentenceData.annotations).forEach((wordIndex) => {
+      let wordInfo = sentenceData.annotations[wordIndex];
+      let word = wordInfo.word;
+      let tag = wordInfo.tag || "O";
+
+      let wordDiv = document.createElement("div");
+      wordDiv.className = "word";
+      wordDiv.innerText = word;
+      wordDiv.onclick = () => selectWord(wordDiv, sentenceIndex, wordIndex);
+
+      let tagDiv = document.createElement("div");
+      tagDiv.className = "tag";
+      tagDiv.innerText = tag;
+      wordDiv.appendChild(tagDiv); // Append tag inside word div
+
+      sentenceDiv.appendChild(wordDiv);
+
+      tagData[wordIndex] = { word, tag };
+    });
+
+    allTagData[sentenceIndex] = { sentence_number: sentenceIndex, annotations: tagData };
     sentencesContainer.appendChild(sentenceDiv);
   });
 }
@@ -105,10 +151,16 @@ function assignTag() {
     alert("Invalid tag!");
     return;
   }
+  selectedWordDiv.title = selectedTag;
+  let tagDiv = selectedWordDiv.querySelector(".tag");
+  if (tagDiv) {
+    tagDiv.innerText = selectedTag; // Update the tag
+  }
   let sentenceIndex = selectedWordDiv.dataset.sentenceIndex;
   let wordIndex = selectedWordDiv.dataset.wordIndex;
   allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
-
+  console.log("here");
+  console.log(allTagData);
   const tagColors = {
     person: "blue",
     location: "green",
@@ -145,7 +197,7 @@ function updateTopTags() {
     tagShortcuts[index + 1] = tag;
     index++;
     topTagsDiv.appendChild(tagDiv);
-    console.log(tagShortcuts);
+    console.log("here", tagShortcuts);
   });
 }
 
@@ -155,7 +207,7 @@ document.addEventListener("keydown", function (event) {
     document.getElementById("tagSearch").value = tagShortcuts[num];
     assignTag();
   }
-  console.log(tagShortcuts[num]);
+  // console.log(tagShortcuts[num]);
 });
 
 function submitFile() {
@@ -195,6 +247,8 @@ function skipFile() {
         // Update the lines array and current file
         lines = data.paragraph.split(".");
         fileName = data.filename;
+        console.log("here", data.taglist);
+        autotaglist = data.taglist;
         displayAllLines();
         document.getElementById("currentFileName").innerText = data.filename;
       } else {

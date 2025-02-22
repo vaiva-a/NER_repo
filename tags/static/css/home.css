@@ -99,11 +99,32 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e0 #ffffff;
   margin-bottom: 1rem;
+  overflow: visible;
+}
+
+.tag {
+  display: none;
+  /* Hide by default */
+  position: absolute;
+  bottom: -25px;
+  /* Adjust position */
+  right: 0;
+  background-color: rgb(182, 166, 166);
+  padding: 3px 6px;
+  border-radius: 5px;
+  font-size: 12px;
+  z-index: 100;
+  /* Ensure it's on top */
+}
+
+/* Show tag when hovering over word */
+.word:hover .tag {
+  display: block;
 }
 
 .word {
   display: inline-block;
-  background: #edf2f7;
+  background: #cad7e3;
   padding: 0.5rem 0.75rem;
   margin: 0.25rem;
   border-radius: 0.5rem;
@@ -111,6 +132,9 @@ body {
   transition: all 0.15s ease;
   font-size: 0.95rem;
   border: 1px solid transparent;
+  position: relative;
+  /* cursor: pointer; */
+  z-index: 10;
 }
 
 .word:hover {
