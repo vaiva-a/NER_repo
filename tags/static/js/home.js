@@ -138,7 +138,10 @@ function assignTag() {
 
   let sentenceIndex = selectedWordDiv.dataset.sentenceIndex;
   let wordIndex = selectedWordDiv.dataset.wordIndex;
-  allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
+  if(allTagData[sentenceIndex]){
+    allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
+  }
+  
 
   // Remove all tag classes first
   selectedWordDiv.classList.remove("tag-person", "tag-location", "tag-object", "tag-building", "tag-none");
@@ -242,11 +245,17 @@ function updateTopTags() {
     building: "#a0522d",
     None: "#edf2f7"
   };
-  
+  let index = 0;
   sortedTags.forEach(([tag, count]) => {
+    
     const tagItem = document.createElement("div");
     tagItem.className = "top-tag-item";
+    tagShortcuts[index+1] = tag;
+    index++;
+    console.log(tag);
     
+    
+    console.log("here",tagShortcuts);
     const tagName = document.createElement("span");
     tagName.className = "top-tag-name";
     tagName.innerText = tag;
