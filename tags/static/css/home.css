@@ -170,3 +170,154 @@ button:hover {
   background: #ed8936;
   color: white;
 }
+/* Improved styling for word elements */
+.word {
+  display: inline-block;
+  padding: 6px 10px;
+  margin: 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.word:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.word.selected {
+  border: 2px solid #3182ce;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.3);
+}
+
+/* Improved tag label styling */
+.tag-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1a202c;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+  text-transform: lowercase;
+}
+
+/* Tag color definitions */
+.tag-person {
+  background-color: #4299e1;
+  color: white;
+}
+
+.tag-location {
+  background-color: #48bb78;
+  color: white;
+}
+
+.tag-object {
+  background-color: #ed8936;
+  color: white;
+}
+
+.tag-building {
+  background-color: #a0522d;
+  color: white;
+}
+
+.tag-none {
+  background-color: #edf2f7;
+  color: #2d3748;
+}
+
+/* Container styling improvements */
+.container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.tag-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+#sentencesContainer {
+  line-height: 2.2;
+  background-color: #fcfcfc;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Button styling improvements */
+button {
+  transition: all 0.2s ease;
+  font-weight: 600;
+  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Top tags list styling */
+#topTagsList {
+  margin-top: 12px;
+}
+
+.top-tag-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background-color: #f7fafc;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.top-tag-name {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Input field improvements */
+input[type="text"] {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+input[type="text"]:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+  outline: none;
+}
