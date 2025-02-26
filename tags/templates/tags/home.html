@@ -5,6 +5,8 @@
     <title>Tag Manager</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/home.css' %}" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+
     <style>
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -47,7 +49,7 @@
                         class="p-2 bg-green-500 text-white rounded">
                     Submit
                 </button>
-                <button class="p-2 bg-yellow-500 text-white rounded" onclick="skipFile()">
+                <button class="p-2 bg-red-500 text-white rounded" onclick="skipFile()">
                     Skip
                 </button>
             </div>
@@ -56,6 +58,11 @@
         <div class="tag-container">
             <h3 class="text-lg font-bold mb-4">Top Used Tags</h3>
             <div id="topTagsList" class="tag-list"></div>
+            <div id="shortcutsList" class="shortcuts-container mt-4">
+                <h3 class="text-md font-bold mb-2">Shortcuts (1-5)</h3>
+                <div id="shortcutsDisplay" class="shortcut-list"></div>
+            </div>
+            
         </div>
     </div>
 </body>

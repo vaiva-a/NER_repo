@@ -138,17 +138,29 @@ function assignTag() {
 
   let sentenceIndex = selectedWordDiv.dataset.sentenceIndex;
   let wordIndex = selectedWordDiv.dataset.wordIndex;
-  if(allTagData[sentenceIndex]){
+
+  // Prevent redundant updates
+  if (
+    allTagData[sentenceIndex] &&
+    allTagData[sentenceIndex].annotations[wordIndex].tag === selectedTag
+  ) {
+    showNotification("Word is already tagged with this entity", "info");
+    return;
+  }
+
+  if (allTagData[sentenceIndex]) {
     allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
   }
-  
 
-  // Remove all tag classes first
-  selectedWordDiv.classList.remove("tag-person", "tag-location", "tag-object", "tag-building", "tag-none");
-  
-  // Add the appropriate tag class
+  // Remove all previous tag classes before adding new one
+  selectedWordDiv.classList.forEach((cls) => {
+    if (cls.startsWith("tag-")) {
+      selectedWordDiv.classList.remove(cls);
+    }
+  });
+
   selectedWordDiv.classList.add(`tag-${selectedTag.toLowerCase()}`);
-  
+
   // Remove existing tag label if any
   let existingTagLabel = selectedWordDiv.querySelector(".tag-label");
   if (existingTagLabel) {
@@ -159,21 +171,30 @@ function assignTag() {
   let tagLabel = document.createElement("div");
   tagLabel.className = "tag-label";
   tagLabel.innerText = selectedTag;
-  
   selectedWordDiv.appendChild(tagLabel);
 
-  // Update tag usage statistics
-  tagUsageCount[selectedTag] = (tagUsageCount[selectedTag] || 0) + 1;
-  updateTopTags();
-  
+  // Update tag usage count only if it's a new tag assignment
+  if (!selectedWordDiv.dataset.tagged) {
+    tagUsageCount[selectedTag] = (tagUsageCount[selectedTag] || 0) + 1;
+    updateTopTags();
+    selectedWordDiv.dataset.tagged = "true"; // Mark as tagged to prevent multiple increments
+  }
+
   // Show success notification
-  showNotification(`Tagged "${selectedWordDiv.innerText}" as ${selectedTag}`, "success");
-  
+  showNotification(
+    `Tagged "${selectedWordDiv.innerText}" as ${selectedTag}`,
+    "success"
+  );
+
   // Auto-select next word if available
   selectNextWord(selectedWordDiv);
 }
 
+
 // Helper function to show notifications
+// Store active notifications to prevent duplicates
+let activeNotifications = new Set();
+
 function showNotification(message, type) {
   // Check if notification container exists, if not create it
   let notifContainer = document.getElementById("notification-container");
@@ -186,7 +207,13 @@ function showNotification(message, type) {
     notifContainer.style.zIndex = "1000";
     document.body.appendChild(notifContainer);
   }
-  
+
+  // Avoid showing the same notification multiple times
+  if (activeNotifications.has(message)) {
+    return;
+  }
+  activeNotifications.add(message);
+
   const notification = document.createElement("div");
   notification.className = `notification ${type}`;
   notification.innerText = message;
@@ -196,7 +223,7 @@ function showNotification(message, type) {
   notification.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
   notification.style.animation = "fadeIn 0.3s, fadeOut 0.3s 2.7s";
   notification.style.fontWeight = "500";
-  
+
   if (type === "success") {
     notification.style.backgroundColor = "#48bb78";
     notification.style.color = "white";
@@ -204,12 +231,13 @@ function showNotification(message, type) {
     notification.style.backgroundColor = "#f56565";
     notification.style.color = "white";
   }
-  
+
   notifContainer.appendChild(notification);
-  
+
   // Remove notification after 3 seconds
   setTimeout(() => {
     notification.remove();
+    activeNotifications.delete(message); // Allow future notifications for new actions
   }, 3000);
 }
 
@@ -217,14 +245,16 @@ function showNotification(message, type) {
 function selectNextWord(currentWordDiv) {
   const words = Array.from(document.querySelectorAll(".word"));
   const currentIndex = words.indexOf(currentWordDiv);
-  
+
   if (currentIndex < words.length - 1) {
     currentWordDiv.classList.remove("selected");
-    if(words[currentIndex + 1]){
+    if (words[currentIndex + 1]) {
       words[currentIndex + 1].classList.add("selected");
-      words[currentIndex + 1].scrollIntoView({ behavior: "smooth", block: "center" });
+      words[currentIndex + 1].scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     }
-    
   }
 }
 
@@ -232,45 +262,71 @@ function selectNextWord(currentWordDiv) {
 function updateTopTags() {
   const topTagsList = document.getElementById("topTagsList");
   topTagsList.innerHTML = "";
-  
+
   // Get tags sorted by usage count
   const sortedTags = Object.entries(tagUsageCount)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
-  
+
   const tagColors = {
     person: "#4299e1",
     location: "#48bb78",
     object: "#ed8936",
     building: "#a0522d",
-    None: "#edf2f7"
+    None: "#edf2f7",
   };
   let index = 0;
   sortedTags.forEach(([tag, count]) => {
-    
     const tagItem = document.createElement("div");
     tagItem.className = "top-tag-item";
-    tagShortcuts[index+1] = tag;
+    tagShortcuts[index + 1] = tag;
     index++;
     console.log(tag);
-    
-    
-    console.log("here",tagShortcuts);
+
+    console.log("here", tagShortcuts);
     const tagName = document.createElement("span");
     tagName.className = "top-tag-name";
     tagName.innerText = tag;
     tagName.style.backgroundColor = tagColors[tag.toLowerCase()] || "#718096";
     tagName.style.color = tag.toLowerCase() === "none" ? "#2d3748" : "white";
-    
+
     const tagCount = document.createElement("span");
     tagCount.className = "top-tag-count";
     tagCount.innerText = count;
-    
+
     tagItem.appendChild(tagName);
     tagItem.appendChild(tagCount);
     topTagsList.appendChild(tagItem);
   });
+  updateShortcuts();
 }
+function updateShortcuts() {
+  const topTags = document.querySelectorAll("#topTagsList .top-tag-item");
+  const shortcutsContainer = document.getElementById("shortcutsDisplay");
+  
+  shortcutsContainer.innerHTML = ""; // Clear existing shortcuts
+
+  topTags.forEach((tag, index) => {
+      if (index < 5) { // Only take the top 5 tags
+          const tagName = tag.querySelector(".top-tag-name").innerText;
+          const shortcutNumber = index + 1; // Assign shortcut (1-5)
+          
+          const shortcutElement = document.createElement("div");
+          shortcutElement.classList.add("shortcut-item");
+
+          shortcutElement.innerHTML = `
+              <span class="shortcut-tag">${tagName}</span>
+              <span class="shortcut-key">${shortcutNumber}</span>
+          `;
+
+          shortcutsContainer.appendChild(shortcutElement);
+      }
+  });
+}
+
+// Call this function after updating the top tags
+
+
 document.addEventListener("keydown", function (event) {
   let num = event.key;
   if (num >= "1" && num <= "5" && tagShortcuts[num]) {
