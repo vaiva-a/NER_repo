@@ -136,15 +136,32 @@ def add_annotator(request):
 @csrf_exempt
 def submit_file(request):
     if request.method == 'POST':
+        print("hit")
         # Parse the filename from the POST request
-        body = json.loads(request.body)
-        filename = body.get('filename')
-
+        # body = json.loads(request.body)
+        # filename = body.get('filename')
+        
         data = json.loads(request.body)
 
         filename = data.get("filename", "default.xlsx")
         annotations = data.get("data", [])
+        print("ann:",annotations)
+        if(data.get("remainingData",{})):
+            remaining_data = data.get("remainingData",{})
+            print(remaining_data)
+            sentence_list= []
+            for sentence_number, sentence_data in remaining_data.items():
+                words = [word_data["word"] for word_data in sentence_data["annotations"].values()]
+                sentence_list.append(" ".join(words))
+            remaining_text = ".\n".join(sentence_list)
+            results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
+            os.makedirs(results_dir, exist_ok=True)
 
+            remaining_file_path = os.path.join(results_dir, f"{filename}_remaining.txt")
+
+            with open(remaining_file_path, "w", encoding="utf-8") as file:
+                file.write(remaining_text)
+    
         results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'results')
         os.makedirs(results_dir, exist_ok=True)  # Ensure directory exists
 

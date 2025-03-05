@@ -8,9 +8,11 @@ const tags = JSON.parse(tag1.replace(/'/g, '"'));
 console.log(tags);
 
 document.addEventListener("DOMContentLoaded", () => {
+  showLoading();
   fetch("/get_paragraph/")
     .then((response) => response.json())
     .then((data) => {
+      hideLoading();
       if (data.status === "success") {
         lines = data.paragraph.split(".");
         fileName = data.filename;
@@ -19,10 +21,33 @@ document.addEventListener("DOMContentLoaded", () => {
         autotaglist = data.taglist;
         document.getElementById("currentFileName").innerText = data.filename;
       }
+    })
+    .catch((error) => {
+      hideLoading();
+      console.error("Error fetching paragraph:", error);
     });
   populateTagList();
 });
+function showLoading() {
+  const sentencesContainer = document.getElementById("sentencesContainer");
+  sentencesContainer.innerHTML = "";  // Clear any old content
+  const loadingDiv = document.createElement("div");
+  loadingDiv.id = "loadingSpinner";
+  loadingDiv.innerHTML = `
+        <div class="flex justify-center items-center">
+            <div class="animate-spin h-10 w-10 border-t-4 border-blue-500 border-solid rounded-full"></div>
+            <span class="ml-3 text-gray-700">Loading paragraph, please wait...</span>
+        </div>
+    `;
+  sentencesContainer.appendChild(loadingDiv);
+}
 
+function hideLoading() {
+  const loadingDiv = document.getElementById("loadingSpinner");
+  if (loadingDiv) {
+    loadingDiv.remove();
+  }
+}
 document.addEventListener("keydown", (event) => {
   if (event.ctrlKey && event.key === "a") {
     event.preventDefault();
@@ -79,10 +104,10 @@ function displayAllLines() {
         wordDiv.innerText = word;
         wordDiv.onclick = () => selectWord(wordDiv, index, idx);
 
-        let tagDiv = document.createElement("div");
-        tagDiv.className = "tag";
-        tagDiv.innerText = "O";
-        wordDiv.appendChild(tagDiv); // Append tag inside word
+        // let tagDiv = document.createElement("div");
+        // tagDiv.className = "tag";
+        // tagDiv.innerText = "O";
+        // wordDiv.appendChild(tagDiv); // Append tag inside word
 
         sentenceDiv.appendChild(wordDiv);
       }
@@ -115,11 +140,16 @@ function AutoTag() {
       wordDiv.className = "word";
       wordDiv.innerText = word;
       wordDiv.onclick = () => selectWord(wordDiv, sentenceIndex, wordIndex);
+      if (tag != 'O') {
+        let tagLabel = document.createElement("div");
+        tagLabel.className = "tag-label";
+        tagLabel.innerText = tag;
+        wordDiv.appendChild(tagLabel); // Append tag inside word div
+      }
 
-      let tagDiv = document.createElement("div");
-      tagDiv.className = "tag";
-      tagDiv.innerText = tag;
-      wordDiv.appendChild(tagDiv); // Append tag inside word div
+
+      // selectedWordDiv.appendChild(tagLabel);
+
 
       sentenceDiv.appendChild(wordDiv);
 
@@ -184,17 +214,17 @@ function assignTag() {
 
   let sentenceIndex = selectedWordDiv.dataset.sentenceIndex;
   let wordIndex = selectedWordDiv.dataset.wordIndex;
-  if(allTagData[sentenceIndex]){
+  if (allTagData[sentenceIndex]) {
     allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
   }
-  
+
 
   // Remove all tag classes first
   selectedWordDiv.classList.remove("tag-person", "tag-location", "tag-object", "tag-building", "tag-none");
-  
+
   // Add the appropriate tag class
   selectedWordDiv.classList.add(`tag-${selectedTag.toLowerCase()}`);
-  
+
   // Remove existing tag label if any
   let existingTagLabel = selectedWordDiv.querySelector(".tag-label");
   if (existingTagLabel) {
@@ -205,16 +235,16 @@ function assignTag() {
   let tagLabel = document.createElement("div");
   tagLabel.className = "tag-label";
   tagLabel.innerText = selectedTag;
-  
+
   selectedWordDiv.appendChild(tagLabel);
 
   // Update tag usage statistics
   tagUsageCount[selectedTag] = (tagUsageCount[selectedTag] || 0) + 1;
   updateTopTags();
-  
+
   // Show success notification
   showNotification(`Tagged "${selectedWordDiv.innerText}" as ${selectedTag}`, "success");
-  
+
   // Auto-select next word if available
   selectNextWord(selectedWordDiv);
 }
@@ -232,7 +262,7 @@ function showNotification(message, type) {
     notifContainer.style.zIndex = "1000";
     document.body.appendChild(notifContainer);
   }
-  
+
   const notification = document.createElement("div");
   notification.className = `notification ${type}`;
   notification.innerText = message;
@@ -242,7 +272,7 @@ function showNotification(message, type) {
   notification.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
   notification.style.animation = "fadeIn 0.3s, fadeOut 0.3s 2.7s";
   notification.style.fontWeight = "500";
-  
+
   if (type === "success") {
     notification.style.backgroundColor = "#48bb78";
     notification.style.color = "white";
@@ -250,9 +280,9 @@ function showNotification(message, type) {
     notification.style.backgroundColor = "#f56565";
     notification.style.color = "white";
   }
-  
+
   notifContainer.appendChild(notification);
-  
+
   // Remove notification after 3 seconds
   setTimeout(() => {
     notification.remove();
@@ -263,14 +293,14 @@ function showNotification(message, type) {
 function selectNextWord(currentWordDiv) {
   const words = Array.from(document.querySelectorAll(".word"));
   const currentIndex = words.indexOf(currentWordDiv);
-  
+
   if (currentIndex < words.length - 1) {
     currentWordDiv.classList.remove("selected");
-    if(words[currentIndex + 1]){
+    if (words[currentIndex + 1]) {
       words[currentIndex + 1].classList.add("selected");
       words[currentIndex + 1].scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    
+
   }
 }
 
@@ -278,12 +308,12 @@ function selectNextWord(currentWordDiv) {
 function updateTopTags() {
   const topTagsList = document.getElementById("topTagsList");
   topTagsList.innerHTML = "";
-  
+
   // Get tags sorted by usage count
   const sortedTags = Object.entries(tagUsageCount)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
-  
+
   const tagColors = {
     person: "#4299e1",
     location: "#48bb78",
@@ -293,25 +323,25 @@ function updateTopTags() {
   };
   let index = 0;
   sortedTags.forEach(([tag, count]) => {
-    
+
     const tagItem = document.createElement("div");
     tagItem.className = "top-tag-item";
-    tagShortcuts[index+1] = tag;
+    tagShortcuts[index + 1] = tag;
     index++;
     console.log(tag);
-    
-    
-    console.log("here",tagShortcuts);
+
+
+    console.log("here", tagShortcuts);
     const tagName = document.createElement("span");
     tagName.className = "top-tag-name";
     tagName.innerText = tag;
     tagName.style.backgroundColor = tagColors[tag.toLowerCase()] || "#718096";
     tagName.style.color = tag.toLowerCase() === "none" ? "#2d3748" : "white";
-    
+
     const tagCount = document.createElement("span");
     tagCount.className = "top-tag-count";
     tagCount.innerText = count;
-    
+
     tagItem.appendChild(tagName);
     tagItem.appendChild(tagCount);
     topTagsList.appendChild(tagItem);
@@ -326,8 +356,79 @@ document.addEventListener("keydown", function (event) {
   // console.log(tagShortcuts[num]);
 });
 
+// function submitFile() {
+//   let formattedTagData = allTagData.map((sentenceData) => {
+//     let annotations = {};
+//     Object.values(sentenceData.annotations).forEach(({ word, tag }) => {
+//       annotations[word] = tag;
+//     });
+//     return { sentence_number: sentenceData.sentence_number, annotations };
+//   });
+//   console.log("here", formattedTagData);
+//   let payload = {
+//     filename: fileName,
+//     data: formattedTagData,
+//   };
+//   fetch("/submit_file/", {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(payload),
+//   })
+//     .then((response) => response.json())
+//     .then((data) => {
+//       alert(data.message);
+//       location.reload();
+//     });
+// }
+function showDialog() {
+  document.getElementById('emptyLinesDialog').style.display = 'block';
+  document.getElementById('dialogOverlay').style.display = 'block';
+}
+
+function hideDialog() {
+  document.getElementById('emptyLinesDialog').style.display = 'none';
+  document.getElementById('dialogOverlay').style.display = 'none';
+}
+
 function submitFile() {
-  let formattedTagData = allTagData.map((sentenceData) => {
+  let emptyLines = {};
+  let allTagDataArray = Object.values(allTagData);
+
+  allTagDataArray.forEach((sentenceData) => {
+    let allOTags = Object.values(sentenceData.annotations).every(({ tag }) => tag === 'O');
+    if (allOTags) {
+      emptyLines[sentenceData.sentence_number] = sentenceData;
+    }
+  });
+
+  if (Object.keys(emptyLines).length > 0) {
+    showDialog();
+
+    // Attach click handlers for dialog buttons
+    document.getElementById('cancelBtn').onclick = () => {
+      hideDialog();
+      console.log("Submission cancelled.");
+    };
+
+    document.getElementById('submitAnywaysBtn').onclick = () => {
+      hideDialog();
+      submitData(allTagDataArray);  // submit everything (including empty lines)
+    };
+
+    document.getElementById('saveForLaterBtn').onclick = () => {
+      hideDialog();
+      let filteredData = allTagDataArray.filter(sentenceData => !emptyLines[sentenceData.sentence_number]);
+      submitData(filteredData, emptyLines);  // Pass non-empty data and empty lines (remainingData)
+    };
+
+  } else {
+    // No empty lines, proceed with normal submission
+    submitData(allTagDataArray);
+  }
+}
+
+function submitData(tagDataArray, remainingData = null) {
+  let formattedTagData = tagDataArray.map((sentenceData) => {
     let annotations = {};
     Object.values(sentenceData.annotations).forEach(({ word, tag }) => {
       annotations[word] = tag;
@@ -337,8 +438,14 @@ function submitFile() {
 
   let payload = {
     filename: fileName,
-    data: formattedTagData,
+    data: formattedTagData
   };
+
+  if (remainingData) {
+    payload.remainingData = remainingData;
+    console.log("rem data:", remainingData);
+  }
+
   fetch("/submit_file/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -346,19 +453,24 @@ function submitFile() {
   })
     .then((response) => response.json())
     .then((data) => {
-      alert(data.message);
+      alert(data.message);  // Optional, replace with your preferred success handling
       location.reload();
+    })
+    .catch((err) => {
+      console.error("Submission failed", err);
     });
 }
-
 function skipFile() {
   const currentFileName = document.getElementById("currentFileName").innerText;
-
+  showLoading();
   fetch(`/skip_file/?currentFileName=${encodeURIComponent(currentFileName)}`, {
     method: "GET",
   })
+
     .then((response) => response.json())
     .then((data) => {
+
+      hideLoading();
       if (data.status === "success") {
         // Update the lines array and current file
         lines = data.paragraph.split(".");
@@ -368,10 +480,38 @@ function skipFile() {
         displayAllLines();
         document.getElementById("currentFileName").innerText = data.filename;
       } else {
+        let sentencesContainer = document.getElementById("sentencesContainer");
+        sentencesContainer.innerHTML = `
+    <div style="
+        background-color: #ffcccc; 
+        color: #a94442; 
+        border: 1px solid #ebccd1; 
+        padding: 15px; 
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 10px;
+        ">
+        Last file reached, please press 
+        <button style="
+            background-color: #12b886; 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        " onclick="skipFile()">Skip</button>
+        to go to the first file again!
+    </div>
+`;
+        document.getElementById("currentFileName").innerText = "!404";
         alert("no more files");
       }
     })
     .catch((error) => {
+      hideLoading();
       console.error("Error skipping file:", error);
       document.getElementById("paraContent").innerText = "Failed to skip file.";
     });
