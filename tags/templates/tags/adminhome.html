@@ -5,13 +5,14 @@
 <head>
   <title>Admin Dashboard</title>
   <link rel="stylesheet" type="text/css" href="{% static 'css/adminpage.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+
 </head>
 
 <body>
   <nav class="navbar">
     <div class="navbar-container">
       <span class="logo">Admin Dashboard</span>
-      <div></div>
       <ul class="nav-links">
         <li><a href="/home">Home</a></li>
         <li><a href="#">Users</a></li>
@@ -88,7 +89,9 @@
       {% for tag in tags %}
       <div class="tag">
         <span onclick="selectTag('{{ tag }}')">{{ tag }}</span>
-        <span class="delete-tag" onclick="confirmDeleteTag('{{ tag }}')">🗑️</span>
+        <span class="delete-tag" onclick="confirmDeleteTag('{{ tag }}')">
+          <img src="{% static 'images/delete-icon.png' %}" alt="Icon" width="20" height="20">
+        </span>
       </div>
       {% endfor %}
     </div>

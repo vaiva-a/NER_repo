@@ -112,9 +112,11 @@ function displayAllLines() {
         sentenceDiv.appendChild(wordDiv);
       }
     });
+    if (sentenceDiv.children.length != 0) {
+      allTagData[index] = { sentence_number: index, annotations: tagData };
+      sentencesContainer.appendChild(sentenceDiv);
+    }
 
-    allTagData[index] = { sentence_number: index, annotations: tagData };
-    sentencesContainer.appendChild(sentenceDiv);
   });
 }
 
@@ -240,7 +242,7 @@ function assignTag() {
 
   // Update tag usage statistics
   tagUsageCount[selectedTag] = (tagUsageCount[selectedTag] || 0) + 1;
-  updateTopTags();
+  updateTopTags(selectedTag);
 
   // Show success notification
   showNotification(`Tagged "${selectedWordDiv.innerText}" as ${selectedTag}`, "success");
@@ -305,14 +307,104 @@ function selectNextWord(currentWordDiv) {
 }
 
 // Improved function to update top tags display
-function updateTopTags() {
+// function updateTopTags() {
+//   const topTagsList = document.getElementById("topTagsList");
+//   topTagsList.innerHTML = "";
+
+//   // Get tags sorted by usage count
+//   const sortedTags = Object.entries(tagUsageCount)
+//     .sort((a, b) => b[1] - a[1])
+//     .slice(0, 5);
+
+//   const tagColors = {
+//     person: "#4299e1",
+//     location: "#48bb78",
+//     object: "#ed8936",
+//     building: "#a0522d",
+//     None: "#edf2f7"
+//   };
+//   let index = 0;
+//   sortedTags.forEach(([tag, count]) => {
+
+//     const tagItem = document.createElement("div");
+//     tagItem.className = "top-tag-item";
+//     tagShortcuts[index + 1] = tag;
+//     index++;
+//     console.log(tag);
+
+
+//     console.log("here", tagShortcuts);
+//     const tagName = document.createElement("span");
+//     tagName.className = "top-tag-name";
+//     tagName.innerText = tag;
+//     tagName.style.backgroundColor = tagColors[tag.toLowerCase()] || "#718096";
+//     tagName.style.color = tag.toLowerCase() === "none" ? "#2d3748" : "white";
+
+//     const tagCount = document.createElement("span");
+//     tagCount.className = "top-tag-count";
+//     tagCount.innerText = count;
+
+//     tagItem.appendChild(tagName);
+//     tagItem.appendChild(tagCount);
+//     topTagsList.appendChild(tagItem);
+//   });
+// }
+let topTags = []; // Stores top 5 tags as [tag, count]
+let topTagsSet = new Set(); // Fast lookup of top tags
+// let tagUsageCount = {}; // Tracks count of all tags
+
+function updateTopTags(tag) {
+  const topTagsList = document.getElementById("topTagsList");
+
+  // If tag is already in topTags, just update the UI
+  if (topTagsSet.has(tag)) {
+    for (let i = 0; i < topTags.length; i++) {
+      if (topTags[i][0] === tag) {
+        topTags[i][1] = tagUsageCount[tag]; // Update count
+        break;
+      }
+    }
+    renderTopTags();
+    console.log("inside has tag");
+    return;
+  }
+
+  // Get the lowest count tag in topTags
+  let lowestIndex = -1;
+  let lowestCount = Infinity;
+
+  if (topTags.length === 5) {
+    topTags.forEach(([t, count], i) => {
+      if (count < lowestCount) {
+        lowestCount = count;
+        lowestIndex = i;
+      }
+    });
+  }
+
+  // Check if the new tag's count is higher than the lowest top tag
+  if (topTags.length < 5 || (tagUsageCount[tag] > lowestCount)) {
+    if (topTags.length === 5) {
+      // Remove the lowest tag from Set and Array
+      console.log("checkpt:", lowestIndex, topTags[lowestIndex]);
+      // topTagsSet.delete(topTags[lowestIndex]);
+      topTags.splice(lowestIndex, 1);
+    }
+
+    // Insert the new tag into topTags & Set
+    topTags.push([tag, tagUsageCount[tag]]);
+    topTagsSet.add(tag);
+
+    // Sort topTags based on count (to keep order correct)
+    topTags.sort((a, b) => b[1] - a[1]);
+  }
+
+  renderTopTags();
+}
+
+function renderTopTags() {
   const topTagsList = document.getElementById("topTagsList");
   topTagsList.innerHTML = "";
-
-  // Get tags sorted by usage count
-  const sortedTags = Object.entries(tagUsageCount)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
 
   const tagColors = {
     person: "#4299e1",
@@ -321,20 +413,18 @@ function updateTopTags() {
     building: "#a0522d",
     None: "#edf2f7"
   };
-  let index = 0;
-  sortedTags.forEach(([tag, count]) => {
 
+  let index = 0;
+  topTags.forEach(([tag, count]) => {
     const tagItem = document.createElement("div");
     tagItem.className = "top-tag-item";
     tagShortcuts[index + 1] = tag;
     index++;
-    console.log(tag);
 
-
-    console.log("here", tagShortcuts);
     const tagName = document.createElement("span");
     tagName.className = "top-tag-name";
     tagName.innerText = tag;
+    console.log(tag);
     tagName.style.backgroundColor = tagColors[tag.toLowerCase()] || "#718096";
     tagName.style.color = tag.toLowerCase() === "none" ? "#2d3748" : "white";
 
@@ -396,9 +486,11 @@ function submitFile() {
 
   allTagDataArray.forEach((sentenceData) => {
     let allOTags = Object.values(sentenceData.annotations).every(({ tag }) => tag === 'O');
-    if (allOTags) {
+    console.log("annotations:", sentenceData["annotations"]);
+    if (allOTags && Object.keys(sentenceData.annotations).length > 0) {
       emptyLines[sentenceData.sentence_number] = sentenceData;
     }
+    console.log("empty lines:", emptyLines);
   });
 
   if (Object.keys(emptyLines).length > 0) {
@@ -507,7 +599,7 @@ function skipFile() {
     </div>
 `;
         document.getElementById("currentFileName").innerText = "!404";
-        alert("no more files");
+        // alert("no more files");
       }
     })
     .catch((error) => {

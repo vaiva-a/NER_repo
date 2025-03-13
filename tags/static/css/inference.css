@@ -1,0 +1,366 @@
+body {
+    background-color: #f0f4f8;
+    color: #1a202c;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    padding: 6rem 2rem 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    padding: 24px;
+    max-width: 1400px;
+    width: 100%;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Container styling */
+.text-box {
+    max-width: 900px;
+    width: 100%;
+    margin: 20px auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background-color: #fff;
+    /* Ensure the container doesn't expand beyond the contenteditable */
+    max-height: 50vh;
+    /* 50% of viewport height */
+    display: flex;
+    /* Use flexbox to allow child to scroll independently */
+    flex-direction: column;
+}
+
+.word {
+    display: inline-block;
+    background: #edf2f7;
+    padding: 6px 10px;
+    margin: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    border: 1px solid transparent;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    user-select: none;
+}
+
+.word:hover {
+    background: #e2e8f0;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.word.selected {
+    background: #4299e1;
+    color: white;
+    border: 1px solid #3182ce;
+    box-shadow: 0 2px 6px rgba(66, 153, 225, 0.3);
+}
+
+.tag-label {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f7fafc;
+    color: #1a202c;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 10;
+    opacity: 0.9;
+    letter-spacing: 0.5px;
+    text-transform: lowercase;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenteditable area styling */
+#inputText {
+    min-height: 150px;
+    max-height: 50vh;
+    /* 50% of viewport height */
+    padding: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    line-height: 1.5;
+    color: #333;
+    outline: none;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    transition: background-color 0.2s ease;
+
+    /* Add scrolling */
+    overflow-y: auto;
+    /* Enable vertical scrolling when content exceeds height */
+    flex: 1;
+    /* Take available space in flex container */
+}
+
+#inputText::spelling-error,
+#inputText::grammar-error {
+    text-decoration: none !important;
+}
+
+/* Custom scrollbar styling */
+#inputText::-webkit-scrollbar {
+    width: 8px;
+}
+
+#inputText::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#inputText::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+#inputText::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Empty state styling with pseudo-element */
+#inputText:empty::before {
+    content: "Enter text here...";
+    color: #a0aec0;
+    pointer-events: none;
+}
+
+/* Focus state */
+#inputText:focus {
+    background-color: #fafafa;
+}
+
+/* textarea {
+    width: 100%;
+    height: 65vh;
+    padding: 16px;
+    border: none;
+    border-radius: 8px;
+    resize: none;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.875rem;
+    background: transparent;
+    line-height: 1.5;
+}
+
+textarea:focus {
+    outline: none;
+} */
+
+.button-row {
+    display: flex;
+    gap: 16px;
+}
+
+button {
+    background: #48bb78;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* #inputText {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    font-size: 18px;
+    font-family: "Arial", sans-serif;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    outline: none;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* When the user focuses on the div */
+#inputText:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+    background-color: #ffffff;
+}
+
+*/ button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.tags-sidebar {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.tags-header {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.tags-list {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    height: 60vh;
+    overflow-y: auto;
+    padding: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f8fafc;
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tags-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tags-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 3px;
+}
+
+.tag {
+    padding: 8px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    font-size: 0.875rem;
+}
+
+.tag:hover {
+    background: #edf2f7;
+    transform: translateX(6px);
+}
+
+.navbar {
+    background-color: #2d3748;
+    color: white;
+    width: 100%;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* Left section for logo + Home */
+.left-section {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    /* Space between logo and home link */
+}
+
+/* Logo */
+.logo {
+    font-size: 1.5rem;
+    /* font-weight: bold; */
+    color: white;
+}
+
+/* Nav links */
+.nav-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+    color: #63b3ed;
+}
+
+/* Logout button */
+.logout-form {
+    margin: 0;
+}
+
+.logout-btn {
+    background-color: #e53e3e;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-btn:hover {
+    background-color: #c53030;
+}
+
+body {
+    background-color: #f0f4f8;
+    color: #1a202c;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    padding: 6rem 2rem 2rem;
+    /* Increased top padding to make space for fixed navbar */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}

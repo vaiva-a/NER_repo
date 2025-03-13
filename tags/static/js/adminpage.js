@@ -69,7 +69,9 @@ function submitNewTag() {
                     console.log(a);
                     newTag.innerHTML = `
                   <span onclick="selectTag('${a}')">${a}</span>
-                  <span class="delete-tag" onclick="confirmDeleteTag('${a}')">🗑️</span>
+                  <span class="delete-tag" onclick="confirmDeleteTag('${a}')">
+                    <img src="{% static 'images/delete-icon.png' %}" alt="Icon" width="20" height="20">
+                  </span>
               `;
                     let topTagsDiv = document.getElementById("tagSelector");
                     topTagsDiv.appendChild(newTag);
@@ -159,15 +161,41 @@ function fetchResultFiles() {
                 const listItem = document.createElement("li");
                 listItem.textContent = file;
 
+                // Create Download Button
                 const downloadButton = document.createElement("button");
-                downloadButton.textContent = "Download \u21E9";
                 downloadButton.onclick = () => downloadFile(file);
+                // Append icon and text inside button
 
+                downloadButton.appendChild(document.createTextNode(" Download "));
+
+                // Create Image Element for Icon
+                const downloadIcon = document.createElement("img");
+                downloadIcon.src = "/static/images/download-icon.png";  // Update with your actual image path
+                downloadIcon.alt = "Download";
+                downloadIcon.width = 20; // Adjust size as needed
+                downloadIcon.height = 20;
+                downloadButton.appendChild(downloadIcon);
+
+
+                // Create Delete Button
                 const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Delete 🗑️";
                 deleteButton.classList.add("delete-btn");
                 deleteButton.onclick = () => deleteFile(file);
 
+                deleteButton.appendChild(document.createTextNode(" Delete "));
+
+                // Create Image Element for Delete Icon
+                const deleteIcon = document.createElement("img");
+                deleteIcon.src = "/static/images/delete-icon.png";  // Update with your actual image path
+                deleteIcon.alt = "Delete";
+                deleteIcon.width = 20;
+                deleteIcon.height = 20;
+
+                // Append icon and text inside button
+                deleteButton.appendChild(deleteIcon);
+
+
+                // Append buttons to list item
                 listItem.appendChild(downloadButton);
                 listItem.appendChild(deleteButton);
 
@@ -176,6 +204,7 @@ function fetchResultFiles() {
         })
         .catch((error) => console.error("Error fetching files:", error));
 }
+
 document.addEventListener("DOMContentLoaded", fetchUploadedFiles);
 function fetchUploadedFiles() {
     fetch("/list_uploads/")
@@ -189,8 +218,14 @@ function fetchUploadedFiles() {
                 listItem.textContent = file;
 
                 const deleteButton = document.createElement("button");
-                deleteButton.textContent = "Delete 🗑️";
+                deleteButton.textContent = "Delete ";
                 deleteButton.classList.add("delete-btn");
+                const deleteIcon = document.createElement("img");
+                deleteIcon.src = "/static/images/delete-icon.png";
+                deleteIcon.alt = "Delete";
+                deleteIcon.width = 20;
+                deleteIcon.height = 20;
+                deleteButton.appendChild(deleteIcon);
                 deleteButton.onclick = () => deleteUploadFile(file);
 
                 listItem.appendChild(deleteButton);

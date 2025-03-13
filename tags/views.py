@@ -22,6 +22,11 @@ def home(request):
     tag_manager = TagManager.get_instance()
     return render(request, 'tags/home.html', {'tags': tag_manager.tags})
 
+@login_required(login_url='')
+def inference(request):
+    tag_manager = TagManager.get_instance()
+    return render(request, 'tags/inference.html', {'tags': tag_manager.tags})
+
 @staff_member_required
 @login_required(login_url='')
 def adminhome(request):
@@ -260,6 +265,24 @@ def get_paragraph(request):
         print("Error:", response.status_code, response.text)
     print("here")
     return JsonResponse({"status": "success", "paragraph": content, "filename": next_file,"taglist":response.json()})
+
+@csrf_exempt
+def auto_tag(request):
+     if request.method == 'POST':
+        print("hit auto tag")
+        
+        data = json.loads(request.body)
+        txttotag = data.get("texttotag", "")
+        print(txttotag)
+        payload = {"paragraph": txttotag}
+
+        # Send the POST request
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print(response.json())  # This will contain the allTagData output
+        else:
+            print("Error:", response.status_code, response.text)
+        return JsonResponse({"status": "success", "paragraph": txttotag,"taglist":response.json()})
 
 def skip_file(request):
     # Ensure session variable exists

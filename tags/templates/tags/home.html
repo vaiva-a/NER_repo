@@ -33,12 +33,30 @@
     </style>
 </head>
 
+
 <body class="bg-gray-50">
+
     <script>
         const tag1 = "{{ tags|safe }}"; //might get slow..change to api fetch
     </script>
     <script src="{% static 'js/home.js' %}"></script>
-
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="left-section">
+                <span class="logo">Annotator Dashboard</span>
+                <ul class="nav-links">
+                    <li><a href="/home">Home</a></li>
+                </ul>
+                <ul class="nav-links">
+                    <li><a href="/inference">Inference</a></li>
+                </ul>
+            </div>
+            <form action="{% url 'logout' %}" method="post" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
+        </div>
+    </nav>
     <div class="container">
         <div class="tag-container">
             <h3 class="text-lg font-bold mb-4">Available Tags</h3>
