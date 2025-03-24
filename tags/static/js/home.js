@@ -4,12 +4,25 @@ let allTagData = [];
 let tagUsageCount = {}; // Store tag usage counts
 let autotaglist = {};
 let tagShortcuts = {};
-const tags = JSON.parse(tag1.replace(/'/g, '"'));
-console.log(tags);
+
+
+const selectedDomain = localStorage.getItem("selectedDomain");
+console.log(selectedDomain);
+// console.log(JSON.parse(tag1.replace(/'/g, '"')))
+var tags;
+if (selectedDomain === "Gen") {
+  tags = JSON.parse(tag1.replace(/'/g, '"'));
+  console.log(tags, "here");
+} else {
+  tags = JSON.parse(tag2.replace(/'/g, '"'));
+  console.log(tags, "here");
+}
+// console.log(tags, "here");
 
 document.addEventListener("DOMContentLoaded", () => {
+
   showLoading();
-  fetch("/get_paragraph/")
+  fetch(`/get_paragraph/?selectedDomain=${encodeURIComponent(selectedDomain)}`)
     .then((response) => response.json())
     .then((data) => {
       hideLoading();
@@ -530,7 +543,8 @@ function submitData(tagDataArray, remainingData = null) {
 
   let payload = {
     filename: fileName,
-    data: formattedTagData
+    data: formattedTagData,
+    domain: selectedDomain
   };
 
   if (remainingData) {
@@ -555,7 +569,7 @@ function submitData(tagDataArray, remainingData = null) {
 function skipFile() {
   const currentFileName = document.getElementById("currentFileName").innerText;
   showLoading();
-  fetch(`/skip_file/?currentFileName=${encodeURIComponent(currentFileName)}`, {
+  fetch(`/skip_file/?currentFileName=${encodeURIComponent(currentFileName)}&selectedDomain=${encodeURIComponent(selectedDomain)}`, {
     method: "GET",
   })
 

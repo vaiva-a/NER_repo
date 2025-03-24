@@ -1,12 +1,13 @@
 from django.db import models
 
-# Create your models here.
+
 class TagManager(models.Model):
-    tags = models.JSONField(default=list)
-    
+    tags = models.JSONField(default=list)  # Ensures an empty list if not initialized
+    tags_med = models.JSONField(default=list)  # Ensures an empty list if not initialized
+
     @classmethod
     def get_instance(cls):
-        return cls.objects.get_or_create(id=1)[0]
+        return cls.objects.get_or_create(id=1)[0]  # Try to fetch the existing instance
 
 class Admin(models.Model):
     username = models.CharField(max_length=50)

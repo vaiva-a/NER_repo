@@ -20,29 +20,42 @@ url = "http://127.0.0.1:8002/predict"
 @login_required(login_url='')
 def home(request):
     tag_manager = TagManager.get_instance()
-    return render(request, 'tags/home.html', {'tags': tag_manager.tags})
+    return render(request, 'tags/home.html', {'tags': tag_manager.tags ,'tags2': tag_manager.tags_med})
+
+@login_required(login_url='')
+def domain(request):
+    return render(request, 'tags/domain.html')
 
 @login_required(login_url='')
 def inference(request):
     tag_manager = TagManager.get_instance()
-    return render(request, 'tags/inference.html', {'tags': tag_manager.tags})
+    return render(request, 'tags/inference.html', {'tags': tag_manager.tags,'tags2': tag_manager.tags_med})
 
 @staff_member_required
 @login_required(login_url='')
 def adminhome(request):
     tag_manager = TagManager.get_instance()
-    return render(request, 'tags/adminhome.html', {'tags': tag_manager.tags})
+    return render(request, 'tags/adminhome.html', {'tags': tag_manager.tags,'tags2': tag_manager.tags_med})
 
 @csrf_exempt
 def add_tag(request):
     if request.method == 'POST':
         tag_manager = TagManager.get_instance()
-        data = json.loads(request.body)
+        data = json.loads(request.body.decode("utf-8"))
         new_tag = data.get('tag')
-        if new_tag and new_tag not in tag_manager.tags:
+        print("ne tag:",new_tag)
+        category = data.get('category')
+        print("ne cat:",category)
+        if new_tag and new_tag not in tag_manager.tags and category=="Gen":
             tag_manager.tags.append(new_tag)
             tag_manager.save()
             return JsonResponse({'status': 'success', 'tags': tag_manager.tags})
+        elif new_tag and new_tag not in tag_manager.tags_med and category=="Med":
+            tag_manager.tags_med.append(new_tag)
+            tag_manager.save()
+            print(tag_manager.tags_med)
+            return JsonResponse({'status': 'success', 'tags': tag_manager.tags_med})
+
     return JsonResponse({'status': 'error'})
 
 # Create your views here.
@@ -55,6 +68,7 @@ def clear_tags(request):
             
             # Clear the tags
             tag_manager.tags = []
+            tag_manager.tags_med = []
             tag_manager.save()
 
             return JsonResponse({'status': 'success', 'message': 'All tags removed successfully.'})
@@ -150,6 +164,7 @@ def submit_file(request):
 
         filename = data.get("filename", "default.xlsx")
         annotations = data.get("data", [])
+        category = data.get("domain", None)
         print("ann:",annotations)
         if(data.get("remainingData",{})):
             remaining_data = data.get("remainingData",{})
@@ -159,18 +174,27 @@ def submit_file(request):
                 words = [word_data["word"] for word_data in sentence_data["annotations"].values()]
                 sentence_list.append(" ".join(words))
             remaining_text = ".\n".join(sentence_list)
-            results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
-            os.makedirs(results_dir, exist_ok=True)
-
+            if category =="Gen":
+                results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
+                os.makedirs(results_dir, exist_ok=True)
+            elif category=="Med":
+                results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
+                os.makedirs(results_dir, exist_ok=True)
             remaining_file_path = os.path.join(results_dir, f"{filename}_remaining.txt")
 
             with open(remaining_file_path, "w", encoding="utf-8") as file:
                 file.write(remaining_text)
-    
-        results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'results')
-        os.makedirs(results_dir, exist_ok=True)  # Ensure directory exists
+        if category =="Gen":
+            results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'results')
+            os.makedirs(results_dir, exist_ok=True)
+            file_path = os.path.join(results_dir, "annotations.xlsx")
+        elif category=="Med":
+            results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'results')
+            os.makedirs(results_dir, exist_ok=True)
+            file_path = os.path.join(results_dir, "annotations_med.xlsx")
+        
 
-        file_path = os.path.join(results_dir, "annotations.xlsx")
+        
 
         # Convert annotations to DataFrame
         records = []
@@ -198,7 +222,10 @@ def submit_file(request):
             return JsonResponse({"status": "error", "message": "Filename is required."})
 
         # Path to the picked files JSON
-        picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+        if category == "Gen":
+            picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+        elif category =="Med":
+            picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
 
         # Ensure the JSON file exists
         if not os.path.exists(picked_files_path):
@@ -220,11 +247,19 @@ def submit_file(request):
     return JsonResponse({"status": "error", "message": "Invalid request method."})
 
 def get_paragraph(request):
+    selected_domain = request.GET.get("selectedDomain", "default")  # Get from query params
+    print("Selected Domain:", selected_domain)  # Debugging
     # Define the path to the text files directory
-    text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
+    if selected_domain=="Gen":
+        text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
+        picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+    else:
+        text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
+        picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_med.json')
+    print(text_files_dir,picked_files_path)
     
     # Define the path for the JSON file to track picked files
-    picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+    
 
     # If the JSON file doesn't exist, create it with an empty list
     if not os.path.exists(picked_files_path):
@@ -288,10 +323,14 @@ def skip_file(request):
     # Ensure session variable exists
     if 'skipped_files' not in request.session:
         request.session['skipped_files'] = []
-
+    selected_domain = request.GET.get('selectedDomain', None)
     # Path to text files and picked files JSON
-    text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
-    picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+    if selected_domain=="Gen":
+        text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
+        picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+    elif selected_domain=="Med":
+        text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
+        picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_med.json')
 
     # Ensure the picked files JSON exists
     if not os.path.exists(picked_files_path):

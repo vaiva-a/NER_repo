@@ -14,7 +14,7 @@
     <div class="navbar-container">
       <span class="logo">Admin Dashboard</span>
       <ul class="nav-links">
-        <li><a href="/home">Home</a></li>
+        <li><a href="/domain">Domain</a></li>
         <li><a href="#">Users</a></li>
         <li><a href="#">Tags</a></li>
       </ul>
@@ -40,32 +40,22 @@
     <div id="addTagDialog" class="dialog" style="display: none">
       <div class="dialog-content">
         <h3>Add a New Tag</h3>
+
+        <!-- Dropdown for selecting category -->
+        <label for="tagCategory">Select Category:</label>
+        <select id="tagCategory">
+          <option value="">-- Select --</option>
+          <option value="Gen">General</option>
+          <option value="Med">Medical</option>
+        </select>
+
+        <!-- Input for tag name -->
         <input type="text" id="newTagInput" placeholder="Enter tag name" />
+
         <div class="dialog-actions">
           <button onclick="submitNewTag()">Add</button>
           <button onclick="closeAddTagDialog()">Cancel</button>
         </div>
-      </div>
-    </div>
-    <div id="addUserDialog" class="dialog-overlay" style="display: none">
-      <div class="dialog-box">
-        <div class="dialog-title">Add New User</div>
-        <form id="addUserForm" onsubmit="submitNewUser(event)">
-          <div class="input-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required />
-          </div>
-          <div class="input-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required />
-          </div>
-          <div class="dialog-buttons">
-            <button type="button" class="cancel-btn" onclick="closeAddUserDialog()">
-              Cancel
-            </button>
-            <button type="submit" class="submit-btn">Add User</button>
-          </div>
-        </form>
       </div>
     </div>
     <div class="upload-area" onclick="triggerFileInput()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">

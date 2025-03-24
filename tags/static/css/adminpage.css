@@ -465,6 +465,44 @@ body {
   color: white;
 }
 
+#tagCategory {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid #edf2f7;
+  border-radius: 6px;
+  font-size: 16px;
+  background-color: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  appearance: none;
+  /* Removes default dropdown styling */
+}
+
+#tagCategory:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+#tagCategory option {
+  font-size: 16px;
+  background: white;
+  color: #333;
+  padding: 10px;
+}
+
+/* Ensure the label matches the modal styling */
+label[for="tagCategory"] {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 16px;
+  color: #333;
+}
+
 .nav-links {
   list-style: none;
   display: flex;

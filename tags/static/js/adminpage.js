@@ -1,23 +1,31 @@
-function openAddUserDialog() {
-    document.getElementById("addUserDialog").style.display = "block";
+function showAddTagDialog() {
+    const dialog = document.getElementById("addTagDialog");
+    dialog.style.display = "flex"; // Show the dialog
 }
 
-function closeAddUserDialog() {
-    document.getElementById("addUserDialog").style.display = "none";
-    document.getElementById("addUserForm").reset();
+function closeAddTagDialog() {
+    const dialog = document.getElementById("addTagDialog");
+    dialog.style.display = "none"; // Hide the dialog
 }
 
-function submitNewUser(event) {
-    event.preventDefault();
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
+function submitNewTag() {
+    console.log("here");
+    const tagCategory = document.getElementById("tagCategory").value.trim();
+    const newTag = document.getElementById("newTagInput").value.trim();
+    console.log("Sending:", { tag: newTag, category: tagCategory });
 
-    fetch("/add_annotator/", {
+    if (!tagCategory) {
+        alert("Please select a tag category (General or Medical).");
+        return;
+    }
+    if (!newTag) {
+        alert("Tag name cannot be empty!");
+        return;
+    }
+
+    fetch("/add_tag/", {
         method: "POST",
-        body: JSON.stringify({
-            username: username,
-            password: password,
-        }),
+        body: JSON.stringify({ tag: newTag, category: tagCategory }),
         headers: {
             "Content-Type": "application/json",
         },
@@ -25,71 +33,76 @@ function submitNewUser(event) {
         .then((response) => response.json())
         .then((data) => {
             if (data.status === "success") {
-                alert("User added successfully!");
-                closeAddUserDialog();
+                alert("Tag added!");
+                // let a = document.getElementById("newTagInput").value;
+                // Clear input fields
+                document.getElementById("newTagInput").value = "";
+                document.getElementById("tagCategory").value = "";
+                window.location.reload();
+                closeAddTagDialog();
             } else {
-                alert(data.message || "Error adding user!");
+                alert("Error adding tag! It might already exist.");
             }
         })
         .catch((error) => {
-            console.error("Error:", error);
-            alert("Failed to add user.");
+            console.error("Error adding tag:", error);
+            alert("Failed to add tag.");
         });
 }
-function showAddTagDialog() {
-    const dialog = document.getElementById("addTagDialog");
-    dialog.style.display = "flex"; // Show the dialog
-}
-function closeAddTagDialog() {
-    const dialog = document.getElementById("addTagDialog");
-    dialog.style.display = "none"; // Hide the dialog
-}
-function submitNewTag() {
-    const newTag = document.getElementById("newTagInput").value.trim();
-    if (newTag) {
-        fetch("/add_tag/", {
-            method: "POST",
-            body: JSON.stringify({ tag: newTag }),
-            headers: {
-                "Content-Type": "application/json",
-            },
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.status === "success") {
-                    alert("Tag added!");
-                    // Clear the input and close the dialog
-                    let a = document.getElementById("newTagInput").value;
-                    document.getElementById("newTagInput").value = "";
+// function showAddTagDialog() {
+//     const dialog = document.getElementById("addTagDialog");
+//     dialog.style.display = "flex"; // Show the dialog
+// }
+// function closeAddTagDialog() {
+//     const dialog = document.getElementById("addTagDialog");
+//     dialog.style.display = "none"; // Hide the dialog
+// }
+// function submitNewTag() {
+//     const newTag = document.getElementById("newTagInput").value.trim();
+//     if (newTag) {
+//         fetch("/add_tag/", {
+//             method: "POST",
+//             body: JSON.stringify({ tag: newTag }),
+//             headers: {
+//                 "Content-Type": "application/json",
+//             },
+//         })
+//             .then((response) => response.json())
+//             .then((data) => {
+//                 if (data.status === "success") {
+//                     alert("Tag added!");
+//                     // Clear the input and close the dialog
+//                     let a = document.getElementById("newTagInput").value;
+//                     document.getElementById("newTagInput").value = "";
 
-                    // Create new tag element
-                    let newTag = document.createElement("div");
-                    newTag.classList.add("tag");
-                    // newTag.setAttribute('onclick', `selectTag('${newTagInput}')`);
-                    console.log(a);
-                    newTag.innerHTML = `
-                  <span onclick="selectTag('${a}')">${a}</span>
-                  <span class="delete-tag" onclick="confirmDeleteTag('${a}')">
-                    <img src="{% static 'images/delete-icon.png' %}" alt="Icon" width="20" height="20">
-                  </span>
-              `;
-                    let topTagsDiv = document.getElementById("tagSelector");
-                    topTagsDiv.appendChild(newTag);
-                    closeAddTagDialog();
-                } else {
-                    alert("Error adding tag! Tag might already exist!");
-                    document.getElementById("newTagInput").value = "";
-                    closeAddTagDialog();
-                }
-            })
-            .catch((error) => {
-                console.error("Error adding tag:", error);
-                alert("Failed to add tag.");
-            });
-    } else {
-        alert("Tag name cannot be empty!");
-    }
-}
+//                     // Create new tag element
+//                     let newTag = document.createElement("div");
+//                     newTag.classList.add("tag");
+//                     // newTag.setAttribute('onclick', `selectTag('${newTagInput}')`);
+//                     console.log(a);
+//                     newTag.innerHTML = `
+//                   <span onclick="selectTag('${a}')">${a}</span>
+//                   <span class="delete-tag" onclick="confirmDeleteTag('${a}')">
+//                     <img src="{% static 'images/delete-icon.png' %}" alt="Icon" width="20" height="20">
+//                   </span>
+//               `;
+//                     let topTagsDiv = document.getElementById("tagSelector");
+//                     topTagsDiv.appendChild(newTag);
+//                     closeAddTagDialog();
+//                 } else {
+//                     alert("Error adding tag! Tag might already exist!");
+//                     document.getElementById("newTagInput").value = "";
+//                     closeAddTagDialog();
+//                 }
+//             })
+//             .catch((error) => {
+//                 console.error("Error adding tag:", error);
+//                 alert("Failed to add tag.");
+//             });
+//     } else {
+//         alert("Tag name cannot be empty!");
+//     }
+// }
 function clearTags() {
     fetch("/clear_tags/", {
         method: "POST",
@@ -373,30 +386,30 @@ function getCsrfToken() {
         ?.split("=")[1];
     return cookieValue;
 }
-function addTag() {
-    const tagInput = document.getElementById("tagInput").value;
-    console.log("new check");
+// function addTag() {
+//     const tagInput = document.getElementById("tagInput").value;
+//     console.log("new check");
 
-    fetch("/add_tag/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-CSRFToken": getCsrfToken(),
-        },
-        body: `tag=${encodeURIComponent(tagInput)}`,
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.status === "success") {
-                // Clear input
+//     fetch("/add_tag/", {
+//         method: "POST",
+//         headers: {
+//             "Content-Type": "application/x-www-form-urlencoded",
+//             "X-CSRFToken": getCsrfToken(),
+//         },
+//         body: `tag=${encodeURIComponent(tagInput)}`,
+//     })
+//         .then((response) => response.json())
+//         .then((data) => {
+//             if (data.status === "success") {
+//                 // Clear input
 
-                console.log("checkking", newTag);
-            } else {
-                alert(data.message);
-            }
-        })
-        .catch((error) => console.error("Error:", error));
-}
+//                 console.log("checkking", newTag);
+//             } else {
+//                 alert(data.message);
+//             }
+//         })
+//         .catch((error) => console.error("Error:", error));
+// }
 function filterTags() {
     let searchInput = document.getElementById("tagSearch").value.toLowerCase();
     let tags = document.querySelectorAll("#tagSelector .tag");
