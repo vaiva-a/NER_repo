@@ -1,3 +1,42 @@
+function openAddUserDialog() {
+    document.getElementById("addUserDialog").style.display = "block";
+}
+
+function closeAddUserDialog() {
+    document.getElementById("addUserDialog").style.display = "none";
+    document.getElementById("addUserForm").reset();
+}
+
+function submitNewUser(event) {
+    event.preventDefault();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    fetch("/add_annotator/", {
+        method: "POST",
+        body: JSON.stringify({
+            username: username,
+            password: password,
+        }),
+        headers: {
+            "Content-Type": "application/json",
+        },
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.status === "success") {
+                alert("User added successfully!");
+                closeAddUserDialog();
+            } else {
+                alert(data.message || "Error adding user!");
+            }
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+            alert("Failed to add user.");
+        });
+}
+
 function showAddTagDialog() {
     const dialog = document.getElementById("addTagDialog");
     dialog.style.display = "flex"; // Show the dialog
