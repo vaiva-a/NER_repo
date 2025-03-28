@@ -414,7 +414,7 @@ def login_page(request):
 
             # Otherwise, redirect to user home
             print("Redirecting to user home")
-            return redirect("/home")
+            return redirect("/domain")
 
         else:
             print("Invalid credentials")
