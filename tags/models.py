@@ -20,3 +20,6 @@ class Annotators(models.Model):
     password = models.CharField(max_length=50)
     last_login = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    general_tagged_count = models.IntegerField(default=0)
+    medical_tagged_count = models.IntegerField(default=0)
+    financial_tagged_count = models.IntegerField(default=0)

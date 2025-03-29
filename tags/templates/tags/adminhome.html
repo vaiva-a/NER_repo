@@ -37,6 +37,27 @@
       </button>
 
     </div>
+    <div id="addUserDialog" class="dialog-overlay" style="display: none">
+      <div class="dialog-box">
+        <div class="dialog-title">Add New User</div>
+        <form id="addUserForm" onsubmit="submitNewUser(event)">
+          <div class="input-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required />
+          </div>
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required />
+          </div>
+          <div class="dialog-buttons">
+            <button type="button" class="cancel-btn" onclick="closeAddUserDialog()">
+              Cancel
+            </button>
+            <button type="submit" class="submit-btn">Add User</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <div id="addTagDialog" class="dialog" style="display: none">
       <div class="dialog-content">
         <h3>Add a New Tag</h3>

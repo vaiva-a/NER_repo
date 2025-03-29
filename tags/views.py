@@ -11,6 +11,7 @@ from django.conf import settings
 from django.http import JsonResponse, FileResponse, HttpResponseBadRequest
 import json
 import os
+from django.shortcuts import get_object_or_404
 import pandas as pd
 import requests
 
@@ -151,6 +152,8 @@ def add_annotator(request):
         'status': 'error',
         'message': 'Invalid request method'
     })
+    
+
 
 @csrf_exempt
 def submit_file(request):
@@ -164,6 +167,10 @@ def submit_file(request):
 
         filename = data.get("filename", "default.xlsx")
         annotations = data.get("data", [])
+        ct = sum(1 for sentence in annotations for tag in sentence['annotations'].values() if tag != 'O')
+        print("count non zero :",ct)
+        username = request.user.username
+        annotator = get_object_or_404(Annotators, username=username)
         category = data.get("domain", None)
         print("ann:",annotations)
         if(data.get("remainingData",{})):
@@ -175,9 +182,11 @@ def submit_file(request):
                 sentence_list.append(" ".join(words))
             remaining_text = ".\n".join(sentence_list)
             if category =="Gen":
+                annotator.general_tagged_count += ct
                 results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
                 os.makedirs(results_dir, exist_ok=True)
             elif category=="Med":
+                annotator.medical_tagged_count += ct
                 results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
                 os.makedirs(results_dir, exist_ok=True)
             remaining_file_path = os.path.join(results_dir, f"{filename}_remaining.txt")
