@@ -170,9 +170,11 @@ function AutoTag() {
 
       tagData[wordIndex] = { word, tag };
     });
+    if (sentenceDiv.children.length != 0) {
+      allTagData[sentenceIndex] = { sentence_number: sentenceIndex, annotations: tagData };
+      sentencesContainer.appendChild(sentenceDiv);
+    }
 
-    allTagData[sentenceIndex] = { sentence_number: sentenceIndex, annotations: tagData };
-    sentencesContainer.appendChild(sentenceDiv);
   });
 }
 
@@ -541,10 +543,19 @@ function submitData(tagDataArray, remainingData = null) {
     return { sentence_number: sentenceData.sentence_number, annotations };
   });
 
+  let formattedTagDataauto = allTagData.map((sentenceData) => {
+    let annotations = {};
+    Object.values(sentenceData.annotations).forEach(({ word, tag }) => {
+      annotations[word] = tag;
+    });
+    return { sentence_number: sentenceData.sentence_number, annotations };
+  });
+
   let payload = {
     filename: fileName,
     data: formattedTagData,
-    domain: selectedDomain
+    domain: selectedDomain,
+    autotaglist: formattedTagDataauto
   };
 
   if (remainingData) {

@@ -1,6 +1,0 @@
-data splitting (text files)
-auto ner tagging
-hosting
-personal short cuts
-fix tagging
-auto tag coloring

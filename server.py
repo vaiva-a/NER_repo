@@ -1,6 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Body
 from pydantic import BaseModel
-from transformers import BertTokenizerFast, BertForTokenClassification
+from datasets import Dataset
+from transformers import Trainer, TrainingArguments
+from dataclasses import dataclass
+import pandas as pd
+from typing import Any, Dict, List
+from transformers import BertTokenizerFast, BertForTokenClassification,Trainer, TrainingArguments,DataCollatorForTokenClassification
 import torch
 
 # Load Model and Tokenizer
@@ -15,6 +20,7 @@ id2tag = {
     4: 'I-LOC', 5: 'I-MISC', 6: 'I-ORG', 7: 'I-PER',
     8: 'O', 9: 'nan'
 }
+tag2id = {v: k for k, v in id2tag.items()}
 
 # FastAPI App
 app = FastAPI()
@@ -56,6 +62,105 @@ def predict(request: ParagraphRequest):
         }
 
     return allTagData
+
+#tokenize and align labels 
+def tokenize_and_align_labels(examples):
+    # Tokenize the input words
+    tokenized_inputs = tokenizer(
+        examples['Words'],
+        is_split_into_words=True,
+        padding='max_length',
+        truncation=True,
+    )
+
+    labels = []
+    for i, words in enumerate(examples['Words']):
+        word_ids = tokenized_inputs.word_ids(batch_index=i)
+        label_ids = []
+        for word_id in word_ids:
+            if word_id is None:
+                label_ids.append(-100)  # Special token
+            else:
+                label_ids.append(tag2id.get(examples['Tags'][i][word_id], -100))
+        labels.append(label_ids)
+
+    # Include the labels in the tokenized inputs
+    tokenized_inputs['labels'] = labels
+    return tokenized_inputs
+
+
+
+# Update model function
+@app.post("/learn")
+async def update_model_with_incremental_data(ann: list = Body(...), autotaglist: list = Body(...)):
+    try:
+        # Prepare training data
+        incremental_train_data = get_updated_sentences(ann, autotaglist)
+
+        if incremental_train_data.empty:
+            return {"message": "No updated data to train on."}
+
+        # Create dataset and tokenize
+        incremental_dataset = Dataset.from_pandas(incremental_train_data)
+        tokenized_incremental_dataset = incremental_dataset.map(
+            tokenize_and_align_labels, batched=True
+        )
+
+        # Training arguments with unused columns allowed
+        incremental_training_args = TrainingArguments(
+            output_dir='./results_incremental',
+            learning_rate=5e-4,
+            per_device_train_batch_size=8,
+            num_train_epochs=1,
+            weight_decay=0.01,
+            logging_steps=10,
+            remove_unused_columns=False  # Ensures the trainer uses all columns
+        )
+
+        # Trainer setup
+        incremental_trainer = Trainer(
+            model=model,
+            args=incremental_training_args,
+            train_dataset=tokenized_incremental_dataset,
+            data_collator=DataCollatorForTokenClassification(tokenizer),
+        )
+
+        # Train the model
+        incremental_trainer.train()
+
+        # Save the model
+        model.save_pretrained(model_path)
+        tokenizer.save_pretrained(model_path)
+
+        return {"message": "Model updated successfully."}
+
+    except Exception as e:
+        return {"message": f"Model update failed: {str(e)}"}
+
+
+# Function to get updated sentences
+def get_updated_sentences(ann, autotaglist):
+    updated_sentences = []
+
+    for ini_sentence, fin_sentence in zip(ann, autotaglist):
+        annotations_ini = ini_sentence["annotations"]
+        annotations_fin = fin_sentence["annotations"]
+
+        modified = False
+        words, tags = [], []
+
+        for word, fin_tag in annotations_fin.items():
+            ini_tag = annotations_ini.get(word, 'O')
+            if fin_tag != ini_tag:
+                modified = True
+            words.append(word)
+            tags.append(fin_tag)
+
+        if modified:
+            updated_sentences.append({"Words": words, "Tags": tags})
+
+    return pd.DataFrame(updated_sentences)
+
 
 # Root Route
 @app.get("/")

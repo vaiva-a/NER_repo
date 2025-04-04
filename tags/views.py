@@ -17,6 +17,7 @@ import requests
 
 # Define the API endpoint for ner model
 url = "http://127.0.0.1:8002/predict"
+url_learn = "http://127.0.0.1:8002/learn"
 
 @login_required(login_url='')
 def home(request):
@@ -167,12 +168,21 @@ def submit_file(request):
 
         filename = data.get("filename", "default.xlsx")
         annotations = data.get("data", [])
+        auto_ann = data.get("autotaglist",[])
+        try:
+            response = requests.post(url_learn, json={'ann': annotations, 'autotaglist': auto_ann})
+            if response.status_code == 200:
+                print("success")
+            else:
+                print("fail")
+        except Exception as e:
+            print("fail")
         ct = sum(1 for sentence in annotations for tag in sentence['annotations'].values() if tag != 'O')
         print("count non zero :",ct)
         username = request.user.username
         annotator = get_object_or_404(Annotators, username=username)
         category = data.get("domain", None)
-        print("ann:",annotations)
+        print("ann:",annotations,"\nautotaglist:",auto_ann,"\ndone")
         if(data.get("remainingData",{})):
             remaining_data = data.get("remainingData",{})
             print(remaining_data)
