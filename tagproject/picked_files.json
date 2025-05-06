@@ -1,1 +1,10 @@
-[]
+{
+  "file1.txt": {
+    "picked_at": "2025-05-06T06:29:54.358029+00:00",
+    "permanent": false
+  },
+  "neww.txt": {
+    "picked_at": "2025-05-06T06:30:15.292077+00:00",
+    "permanent": false
+  }
+}

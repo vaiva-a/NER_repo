@@ -44,4 +44,5 @@ urlpatterns = [
     path('delete_result/', views.delete_result_file, name='delete_result'),
     path('delete_upload/', views.delete_upload_file, name='delete_upload'),
     path('delete_tag/', views.delete_tag, name='delete_tag'),
+    path('heartbeat/',views.heartbeat,name="heartbeat"),
 ]
