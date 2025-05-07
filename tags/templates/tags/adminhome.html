@@ -10,13 +10,20 @@
 </head>
 
 <body>
+  <div class="background">
+    <div class="waves">
+      <div class="wave"></div>
+      <div class="wave"></div>
+    </div>
+  </div>
+  
   <nav class="navbar">
     <div class="navbar-container">
       <span class="logo">Admin Dashboard</span>
       <ul class="nav-links">
-        <li><a href="/domain">Domain</a></li>
-        <li><a href="#">Users</a></li>
-        <li><a href="#">Tags</a></li>
+        <li><a href="/adminhome">Home </a></li>
+        <li><a href="/adminhome/users">Users</a></li>
+        <li><a href="/adminhome/tags">Tags</a></li>
       </ul>
       <form action="{% url 'logout' %}" method="post" class="logout-form">
         {% csrf_token %}
@@ -24,8 +31,8 @@
       </form>
     </div>
   </nav>
-  <div class="container">
-    <div class="button-group">
+  <div class="admin-container">
+    <!-- <div class="button-group">
       <button class="action-button" onclick="openAddUserDialog()">
         add user
       </button>
@@ -36,7 +43,45 @@
         add tag
       </button>
 
+    </div> -->
+    <h2 class="section-title">Admin Dashboard</h2>
+    
+    <div class="files-grid">
+      <div class="upload-section">
+        <h3>Upload File</h3>
+        <div class="upload-area" onclick="triggerFileInput()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+          <div class="upload-icon">📤</div>
+          <p>upload file / drag and drop here</p>
+          <input type="file" id="file-input" />
+        </div>
+      </div>
+
+      <div class="result-files-container">
+        <h3>Uploaded Files</h3>
+        <ul id="upload-files-list" class="files-list"></ul>
+      </div>
     </div>
+
+    <div class="result-files-container full-width">
+      <h3>Result Files</h3>
+      <ul id="result-files-list" class="files-list">
+        <div class="scroll-container"></div>
+      </ul>
+    </div>
+    
+    <!-- <h3>Tags</h3>
+    <input type="text" id="tagSearch" placeholder="Search tags..." onkeyup="filterTags()" />
+    <div id="tagSelector" class="tag-container">
+      {% for tag in tags %}
+      <div class="tag">
+        <span onclick="selectTag('{{ tag }}')">{{ tag }}</span>
+        <span class="delete-tag" onclick="confirmDeleteTag('{{ tag }}')">
+          <img src="{% static 'images/delete-icon.png' %}" alt="Icon" width="20" height="20">
+        </span>
+      </div> 
+      {% endfor %}-->
+    </div>
+
     <div id="addUserDialog" class="dialog-overlay" style="display: none">
       <div class="dialog-box">
         <div class="dialog-title">Add New User</div>
@@ -68,6 +113,7 @@
           <option value="">-- Select --</option>
           <option value="Gen">General</option>
           <option value="Med">Medical</option>
+          <option value="Fin">Medical</option>
         </select>
 
         <!-- Input for tag name -->
@@ -79,34 +125,6 @@
         </div>
       </div>
     </div>
-    <div class="upload-area" onclick="triggerFileInput()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
-      <p>upload file / drag and drop here</p>
-      <input type="file" id="file-input" />
-    </div>
-
-    <div class="result-files-container">
-      <h3>Uploaded Files</h3>
-      <ul id="upload-files-list"></ul>
-    </div>
-    <div class="result-files-container">
-      <h3>Result Files</h3>
-      <ul id="result-files-list">
-        <div class="scroll-container"></div>
-      </ul>
-    </div>
-    <h3>Tags</h3>
-    <input type="text" id="tagSearch" placeholder="Search tags..." onkeyup="filterTags()" />
-    <div id="tagSelector" class="tag-container">
-      {% for tag in tags %}
-      <div class="tag">
-        <span onclick="selectTag('{{ tag }}')">{{ tag }}</span>
-        <span class="delete-tag" onclick="confirmDeleteTag('{{ tag }}')">
-          <img src="{% static 'images/delete-icon.png' %}" alt="Icon" width="20" height="20">
-        </span>
-      </div>
-      {% endfor %}
-    </div>
-
 
     <p id="selectedTag" class="selected-tag"></p>
   </div>

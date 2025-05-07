@@ -22,7 +22,7 @@ url_learn = "http://127.0.0.1:8002/learn"
 @login_required(login_url='')
 def home(request):
     tag_manager = TagManager.get_instance()
-    return render(request, 'tags/home.html', {'tags': tag_manager.tags ,'tags2': tag_manager.tags_med})
+    return render(request, 'tags/home.html', {'tags': tag_manager.tags ,'tags2': tag_manager.tags_med,'tags3':tag_manager.tags_fin})
 
 @login_required(login_url='')
 def domain(request):
@@ -31,13 +31,13 @@ def domain(request):
 @login_required(login_url='')
 def inference(request):
     tag_manager = TagManager.get_instance()
-    return render(request, 'tags/inference.html', {'tags': tag_manager.tags,'tags2': tag_manager.tags_med})
+    return render(request, 'tags/inference.html', {'tags': tag_manager.tags,'tags2': tag_manager.tags_med,'tags3':tag_manager.tags_fin})
 
 @staff_member_required
 @login_required(login_url='')
 def adminhome(request):
     tag_manager = TagManager.get_instance()
-    return render(request, 'tags/adminhome.html', {'tags': tag_manager.tags,'tags2': tag_manager.tags_med})
+    return render(request, 'tags/adminhome.html', {'tags': tag_manager.tags,'tags2': tag_manager.tags_med,'tags3':tag_manager.tags_fin})
 
 @csrf_exempt
 def add_tag(request):
@@ -57,6 +57,11 @@ def add_tag(request):
             tag_manager.save()
             print(tag_manager.tags_med)
             return JsonResponse({'status': 'success', 'tags': tag_manager.tags_med})
+        elif new_tag and new_tag not in tag_manager.tags_fin and category=="Fin":
+            tag_manager.tags_fin.append(new_tag)
+            tag_manager.save()
+            print(tag_manager.tags_fin)
+            return JsonResponse({'status': 'success', 'tags': tag_manager.tags_fin})
 
     return JsonResponse({'status': 'error'})
 
@@ -154,6 +159,36 @@ def add_annotator(request):
         'message': 'Invalid request method'
     })
     
+@csrf_exempt
+def remove_annotator(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+
+            if not username:
+                return JsonResponse({'status': 'error', 'message': 'Username is required.'})
+
+            # First, delete from the Annotators table
+            annotator = Annotators.objects.filter(username=username).first()
+            if annotator:
+                annotator.delete()
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Annotator not found in Annotators table.'})
+
+            # Then, delete from the User model
+            user = User.objects.filter(username=username).first()
+            if user:
+                user.delete()
+            else:
+                return JsonResponse({'status': 'error', 'message': 'User not found in auth system.'})
+
+            return JsonResponse({'status': 'success', 'message': f'Annotator "{username}" removed successfully.'})
+        
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
 
 @csrf_exempt
@@ -169,14 +204,14 @@ def submit_file(request):
         filename = data.get("filename", "default.xlsx")
         annotations = data.get("data", [])
         auto_ann = data.get("autotaglist",[])
-        try:
-            response = requests.post(url_learn, json={'ann': annotations, 'autotaglist': auto_ann})
-            if response.status_code == 200:
-                print("success")
-            else:
-                print("fail")
-        except Exception as e:
-            print("fail")
+        # try:
+        #     response = requests.post(url_learn, json={'ann': annotations, 'autotaglist': auto_ann})
+        #     if response.status_code == 200:
+        #         print("success")
+        #     else:
+        #         print("fail")
+        # except Exception as e:
+        #     print("fail")
         ct = sum(1 for sentence in annotations for tag in sentence['annotations'].values() if tag != 'O')
         print("count non zero :",ct)
         username = request.user.username
@@ -199,20 +234,30 @@ def submit_file(request):
                 annotator.medical_tagged_count += ct
                 results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
                 os.makedirs(results_dir, exist_ok=True)
+            else:
+                annotator.financial_tagged_count += ct
+                results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_fin')
+                os.makedirs(results_dir, exist_ok=True)
             remaining_file_path = os.path.join(results_dir, f"{filename}_remaining.txt")
 
             with open(remaining_file_path, "w", encoding="utf-8") as file:
                 file.write(remaining_text)
         if category =="Gen":
+            annotator.general_tagged_count += ct
             results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'results')
             os.makedirs(results_dir, exist_ok=True)
-            file_path = os.path.join(results_dir, "annotations.xlsx")
+            file_path = os.path.join(results_dir, "annotations_gen.xlsx")
         elif category=="Med":
+            annotator.medical_tagged_count += ct
             results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'results')
             os.makedirs(results_dir, exist_ok=True)
             file_path = os.path.join(results_dir, "annotations_med.xlsx")
-        
-
+        else:
+            annotator.financial_tagged_count += ct
+            results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'results')
+            os.makedirs(results_dir, exist_ok=True)
+            file_path = os.path.join(results_dir, "annotations_fin.xlsx")
+        annotator.save()
         
 
         # Convert annotations to DataFrame
@@ -231,9 +276,12 @@ def submit_file(request):
         df = pd.DataFrame(records)
 
         # Append or create the file
+        print("the file path",file_path)
         if os.path.exists(file_path):
+            print("true it exits")
             existing_df = pd.read_excel(file_path)
             df = pd.concat([existing_df, df], ignore_index=True)
+            print("concat done successfully")
 
         df.to_excel(file_path, index=False)
 
@@ -272,9 +320,12 @@ def get_paragraph(request):
     if selected_domain=="Gen":
         text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
         picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
-    else:
+    elif selected_domain == "Med":
         text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
         picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_med.json')
+    else:
+        text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_fin')
+        picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_fin.json')
     print(text_files_dir,picked_files_path)
     
     # Define the path for the JSON file to track picked files
@@ -350,6 +401,9 @@ def skip_file(request):
     elif selected_domain=="Med":
         text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
         picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_med.json')
+    else:
+        text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_fin')
+        picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_fin.json')
 
     # Ensure the picked files JSON exists
     if not os.path.exists(picked_files_path):
@@ -526,3 +580,16 @@ def delete_upload_file(request):
             return JsonResponse({'status': 'error', 'message': 'File not found'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+def users(request):
+    users = Annotators.objects.all()
+    return render(request, 'tags/users.html', {'users': users})
+
+def tags(request):
+    tag_manager = TagManager.get_instance()
+    return render(request, 'tags/tagpage.html', {
+        'tags': tag_manager.tags,
+        'tags_med': tag_manager.tags_med,
+        'tags_fin': tag_manager.tags_fin
+    })
+   

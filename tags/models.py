@@ -4,6 +4,7 @@ from django.db import models
 class TagManager(models.Model):
     tags = models.JSONField(default=list)  # Ensures an empty list if not initialized
     tags_med = models.JSONField(default=list)  # Ensures an empty list if not initialized
+    tags_fin = models.JSONField(default=list)
 
     @classmethod
     def get_instance(cls):

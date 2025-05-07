@@ -35,10 +35,17 @@
 
 
 <body class="bg-gray-50">
-
+    <div class="background">
+        <div class="waves">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+    </div>
     <script>
         const tag1 = "{{ tags|safe }}"; //might get slow..change to api fetch
         const tag2 = "{{ tags2|safe }}";
+        const tag3 = "{{ tags3|safe }}"
     </script>
     <script src="{% static 'js/home.js' %}"></script>
     <nav class="navbar">
@@ -73,7 +80,7 @@
         <div class="main-content">
             <h2 class="text-xl font-bold mb-4">Tag Annotator</h2>
             <div id="sentencesContainer" class="p-4 border rounded-lg bg-white shadow-md"
-                style="max-height: 600px; overflow-y: auto"></div>
+                style="max-height: 450px; overflow-y: auto"></div>
             <div id="currentFileName" class="text-sm text-gray-500 mt-2"></div>
             <!-- <div class="stats-container">
                 <h3 class="text-lg font-bold">Top 5 Tags</h3>

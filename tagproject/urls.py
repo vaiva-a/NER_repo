@@ -27,6 +27,8 @@ urlpatterns = [
     path('domain/', views.domain, name='domain'),
     path('inference/', views.inference, name='inference'),
     path('adminhome/', views.adminhome, name='adminhome'),
+    path('adminhome/users/', views.users, name='users'),
+    path('adminhome/tags/', views.tags, name='tags'),
     path('add_tag/', views.add_tag, name='add_tag'),
     path('auto_tag/', views.auto_tag, name='auto_tag'),
     path('admin/', admin.site.urls),
@@ -37,6 +39,7 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('skip_file/', views.skip_file, name='skip_file'),
     path('add_annotator/', views.add_annotator, name='add_annotator'),
+    path('remove_annotator/', views.remove_annotator, name='remove_annotator'),
     path('upload_file/', views.upload_file, name='upload_file'),
     path('list_results/', views.list_result_files, name='list_results'),
     path('list_uploads/', views.list_uploaded_files, name='list_uploads'),
@@ -44,4 +47,6 @@ urlpatterns = [
     path('delete_result/', views.delete_result_file, name='delete_result'),
     path('delete_upload/', views.delete_upload_file, name='delete_upload'),
     path('delete_tag/', views.delete_tag, name='delete_tag'),
+    
+    
 ]

@@ -13,8 +13,12 @@ var tags;
 if (selectedDomain === "Gen") {
   tags = JSON.parse(tag1.replace(/'/g, '"'));
   console.log(tags, "here");
-} else {
+} else if(selectedDomain === "Med") {
   tags = JSON.parse(tag2.replace(/'/g, '"'));
+  console.log(tags, "here");
+}
+else{
+  tags = JSON.parse(tag3.replace(/'/g, '"'));
   console.log(tags, "here");
 }
 // console.log(tags, "here");
@@ -245,6 +249,7 @@ function assignTag() {
   // Remove existing tag label if any
   let existingTagLabel = selectedWordDiv.querySelector(".tag-label");
   if (existingTagLabel) {
+    tagUsageCount[existingTagLabel.innerHTML]--;
     existingTagLabel.remove();
   }
 
@@ -374,10 +379,7 @@ function updateTopTags(tag) {
   // If tag is already in topTags, just update the UI
   if (topTagsSet.has(tag)) {
     for (let i = 0; i < topTags.length; i++) {
-      if (topTags[i][0] === tag) {
-        topTags[i][1] = tagUsageCount[tag]; // Update count
-        break;
-      }
+      topTags[i][1] = tagUsageCount[topTags[i][0]]; // Update count
     }
     renderTopTags();
     console.log("inside has tag");
@@ -527,10 +529,11 @@ function submitFile() {
       let filteredData = allTagDataArray.filter(sentenceData => !emptyLines[sentenceData.sentence_number]);
       submitData(filteredData, emptyLines);  // Pass non-empty data and empty lines (remainingData)
     };
-
+    allTagData = {};
   } else {
     // No empty lines, proceed with normal submission
     submitData(allTagDataArray);
+    allTagData = {};
   }
 }
 

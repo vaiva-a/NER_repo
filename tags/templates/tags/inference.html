@@ -9,17 +9,20 @@
 </head>
 
 <body>
+    <div class="background">
+        <div class="waves">
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+    </div>
+
     <nav class="navbar">
         <div class="navbar-container">
             <div class="left-section">
                 <span class="logo">Annotator Dashboard</span>
                 <ul class="nav-links">
                     <li><a href="/home">Home</a></li>
-                </ul>
-                <ul class="nav-links">
-                    <li><a href="/inference">Inference</a></li>
-                </ul>
-                <ul class="nav-links">
+                    <li><a href="/inference" class="active">Inference</a></li>
                     <li><a href="/domain">Domain</a></li>
                 </ul>
             </div>
@@ -29,11 +32,11 @@
             </form>
         </div>
     </nav>
+
     <div class="container">
         <div class="main-content">
             <div class="text-box">
                 <div contenteditable="true" id="inputText"></div>
-                <!-- <textarea placeholder="enter text here" id="inputText"></textarea> -->
             </div>
 
             <div class="button-row">
@@ -43,7 +46,7 @@
         </div>
 
         <div class="tags-sidebar">
-            <div class="tags-header">tags:</div>
+            <div class="tags-header">Available Tags</div>
             <div class="tags-list">
                 {% for tag in tags %}
                 <div class="tag">{{ tag }}</div>
