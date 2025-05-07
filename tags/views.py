@@ -14,6 +14,7 @@ import os
 from django.shortcuts import get_object_or_404
 import pandas as pd
 import requests
+from datetime import datetime, timezone
 
 # Define the API endpoint for ner model
 url = "http://127.0.0.1:8002/predict"
@@ -215,7 +216,9 @@ def submit_file(request):
         ct = sum(1 for sentence in annotations for tag in sentence['annotations'].values() if tag != 'O')
         print("count non zero :",ct)
         username = request.user.username
+        print("curr user",username)
         annotator = get_object_or_404(Annotators, username=username)
+        print(annotator)
         category = data.get("domain", None)
         print("ann:",annotations,"\nautotaglist:",auto_ann,"\ndone")
         if(data.get("remainingData",{})):
@@ -228,6 +231,7 @@ def submit_file(request):
             remaining_text = ".\n".join(sentence_list)
             if category =="Gen":
                 annotator.general_tagged_count += ct
+                print("annotation count:",annotator.general_tagged_count)
                 results_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
                 os.makedirs(results_dir, exist_ok=True)
             elif category=="Med":
@@ -292,12 +296,12 @@ def submit_file(request):
         if category == "Gen":
             picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
         elif category =="Med":
-            picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+            picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_med.json')
 
         # Ensure the JSON file exists
         if not os.path.exists(picked_files_path):
             with open(picked_files_path, 'w') as f:
-                json.dump([], f)
+                json.dump({}, f)
 
         # Load the picked files list
         with open(picked_files_path, 'r') as f:
@@ -305,13 +309,73 @@ def submit_file(request):
 
         # Add the filename if not already present
         if filename not in picked_files:
-            picked_files.append(filename)
-            with open(picked_files_path, 'w') as f:
+            # picked_files.append(filename)
+            picked_files[filename] = {
+                "picked_at": datetime.now(timezone.utc).isoformat(),
+                "permanent":True
+            }
+            
+        else:
+            picked_files[filename] = {
+                "picked_at": datetime.now(timezone.utc).isoformat(),
+                "permanent":True
+            }
+        with open(picked_files_path, 'w') as f:
                 json.dump(picked_files, f)
-
         return JsonResponse({"status": "success", "message": f"File '{filename}' has been submitted."})
 
     return JsonResponse({"status": "error", "message": "Invalid request method."})
+
+
+PICKED_FILE_PATH = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files.json')
+PICKED_FILE_PATH_MED = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_med.json')
+
+@csrf_exempt
+def heartbeat(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            current_file = data.get("current_file")
+            category = data.get("category")
+            print("heartbeat:",current_file,category)
+            if not current_file or not category:
+                return JsonResponse({"error": "Missing file name or category"}, status=400)
+            if category == "Gen":
+                if not os.path.exists(PICKED_FILE_PATH):
+                    return JsonResponse({"error": "Picked file list not found"}, status=500)
+
+                with open(PICKED_FILE_PATH, "r+") as f:
+                    picked_files = json.load(f)
+
+                    if current_file in picked_files:
+                        picked_files[current_file]["picked_at"] = datetime.now(timezone.utc).isoformat()
+
+                        f.seek(0)
+                        f.truncate()
+                        json.dump(picked_files, f, indent=2)
+
+                return JsonResponse({"status": "alive"})
+            elif category == "Med":
+                if not os.path.exists(PICKED_FILE_PATH):
+                    return JsonResponse({"error": "Picked file list not found"}, status=500)
+
+                with open(PICKED_FILE_PATH, "r+") as f:
+                    picked_data = json.load(f)
+                    picked_files = picked_data.get("picked_files", {})
+
+                    if current_file in picked_files:
+                        picked_files[current_file]["picked_at"] = datetime.now(timezone.utc).isoformat()
+
+                        f.seek(0)
+                        f.truncate()
+                        json.dump(picked_files, f, indent=2)
+
+                return JsonResponse({"status": "alive"})
+            else:
+                return JsonResponse({"error": "category not found"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
 
 def get_paragraph(request):
     selected_domain = request.GET.get("selectedDomain", "default")  # Get from query params
@@ -334,11 +398,13 @@ def get_paragraph(request):
     # If the JSON file doesn't exist, create it with an empty list
     if not os.path.exists(picked_files_path):
         with open(picked_files_path, 'w') as f:
-            json.dump([], f)
+            json.dump({}, f)
 
     # Load the list of picked files
     with open(picked_files_path, 'r') as f:
-        picked_files = json.load(f)
+        picked_data = json.load(f)
+        picked_files = set(picked_data.keys())
+    print("here are the keys:",picked_files)
 
     # List all text files in the directory
     all_text_files = [f for f in os.listdir(text_files_dir) if f.endswith('.txt')]
@@ -360,6 +426,15 @@ def get_paragraph(request):
     print(content)
     payload = {"paragraph": content}
 
+    # Add the filename if not already present
+    if next_file not in picked_data:
+        # picked_files.append(filename)
+        picked_data[next_file] = {
+            "picked_at": datetime.now(timezone.utc).isoformat(),
+            "permanent":False
+        }
+    with open(picked_files_path, 'w') as f:
+        json.dump(picked_data, f)
     # Send the POST request
     response = requests.post(url, json=payload)
     
@@ -408,15 +483,18 @@ def skip_file(request):
     # Ensure the picked files JSON exists
     if not os.path.exists(picked_files_path):
         with open(picked_files_path, 'w') as f:
-            json.dump([], f)
+            json.dump({}, f)
 
     # Load the picked files list
     with open(picked_files_path, 'r') as f:
-        picked_files = json.load(f)
+        picked_data = json.load(f)
+        picked_files = picked_data.keys()
 
     # Parse the current filename from the frontend
     current_file = request.GET.get('currentFileName', None)
-    
+    if current_file in picked_data:
+        del picked_data[current_file]
+
     if current_file and current_file not in request.session['skipped_files']:
         request.session['skipped_files'].append(current_file)
         request.session.modified = True
@@ -437,7 +515,15 @@ def skip_file(request):
     # Pick the next file
     next_file = remaining_files[0]
     file_path = os.path.join(text_files_dir, next_file)
-
+    # Add the filename if not already present
+    if next_file not in picked_data:
+        # picked_files.append(filename)
+        picked_data[next_file] = {
+            "picked_at": datetime.now(timezone.utc).isoformat(),
+            "permanent":False
+        }
+    with open(picked_files_path, 'w') as f:
+        json.dump(picked_data, f)
     # Read the content of the next file
     with open(file_path, 'r') as file:
         content = file.read()
@@ -461,7 +547,7 @@ def reset_picked_files(request):
     try:
         print(f"Attempting to reset the file at {picked_files_path}")  # Debugging line
         with open(picked_files_path, 'w') as f:
-            json.dump([], f)
+            json.dump({}, f)
 
         return JsonResponse({"status": "success", "message": "Picked files list has been reset."})
     

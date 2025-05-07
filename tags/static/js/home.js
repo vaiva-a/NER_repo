@@ -104,7 +104,7 @@ function selectTag(tag) {
 function displayAllLines() {
   let sentencesContainer = document.getElementById("sentencesContainer");
   sentencesContainer.innerHTML = "";
-
+  allTagData = [];
   lines.forEach((line, index) => {
     let words = line.trim().split(" ");
     let tagData = {};
@@ -221,6 +221,7 @@ function selectWord(wordDiv, sentenceIndex, wordIndex) {
 //   updateTopTags();
 // }
 function assignTag() {
+  console.log(allTagData)
   let selectedWordDiv = document.querySelector(".word.selected");
   if (!selectedWordDiv) {
     showNotification("Please select a word first", "error");
@@ -235,7 +236,9 @@ function assignTag() {
 
   let sentenceIndex = selectedWordDiv.dataset.sentenceIndex;
   let wordIndex = selectedWordDiv.dataset.wordIndex;
+  console.log("indices:", selectedWordDiv.dataset.sentenceIndex, selectedWordDiv.dataset.wordIndex)
   if (allTagData[sentenceIndex]) {
+    console.log("updating tag array");
     allTagData[sentenceIndex].annotations[wordIndex].tag = selectedTag;
   }
 
@@ -322,7 +325,8 @@ function selectNextWord(currentWordDiv) {
       words[currentIndex + 1].classList.add("selected");
       words[currentIndex + 1].scrollIntoView({ behavior: "smooth", block: "center" });
     }
-
+    document.querySelector(".word.selected").click();
+    console.log(document.querySelector(".word.selected"))
   }
 }
 
@@ -500,7 +504,7 @@ function hideDialog() {
 function submitFile() {
   let emptyLines = {};
   let allTagDataArray = Object.values(allTagData);
-
+  console.log("sentence data:", allTagDataArray);
   allTagDataArray.forEach((sentenceData) => {
     let allOTags = Object.values(sentenceData.annotations).every(({ tag }) => tag === 'O');
     console.log("annotations:", sentenceData["annotations"]);
@@ -509,6 +513,23 @@ function submitFile() {
     }
     console.log("empty lines:", emptyLines);
   });
+  // allTagDataArray.forEach((sentenceData) => {
+  //   let annotations = sentenceData.annotations || {};
+
+  //   // Skip if there are no annotations
+  //   if (Object.keys(annotations).length === 0) return;
+
+  //   // Check if all tags are 'O'
+  //   let allOTags = Object.values(annotations).every(({ tag }) => tag === 'O');
+
+  //   console.log("annotations:", annotations);
+
+  //   if (allOTags) {
+  //     emptyLines[sentenceData.sentence_number] = sentenceData;
+  //   }
+
+  //   console.log("empty lines:", emptyLines);
+  // });
 
   if (Object.keys(emptyLines).length > 0) {
     showDialog();
@@ -521,6 +542,7 @@ function submitFile() {
 
     document.getElementById('submitAnywaysBtn').onclick = () => {
       hideDialog();
+
       submitData(allTagDataArray);  // submit everything (including empty lines)
     };
 
@@ -536,6 +558,52 @@ function submitFile() {
     allTagData = {};
   }
 }
+// 1. Get CSRF token from cookies (works in standalone .js files)
+function getCSRFToken() {
+  const cookieValue = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrftoken='))
+    ?.split('=')[1];
+  return cookieValue;
+}
+
+// 2. Setup heartbeat with error handling and cleanup
+let heartbeatInterval;
+
+function startHeartbeat() {
+  const currentFileElement = document.getElementById("currentFileName");
+  if (!currentFileElement) return; // Exit if no file is loaded
+
+  heartbeatInterval = setInterval(() => {
+    fetch('/heartbeat/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCSRFToken() // Dynamic token
+      },
+      body: JSON.stringify({
+        current_file: currentFileElement.innerText,
+        category: selectedDomain
+      })
+    })
+      .then(response => {
+        if (!response.ok) {
+          console.error('Heartbeat failed:', response.status);
+        }
+      })
+      .catch(error => {
+        console.error('Heartbeat error:', error);
+      });
+  }, 120000); // 2 minutes
+}
+
+// Start when page loads
+document.addEventListener('DOMContentLoaded', startHeartbeat);
+
+// Cleanup when user leaves
+window.addEventListener('beforeunload', () => {
+  if (heartbeatInterval) clearInterval(heartbeatInterval);
+});
 
 function submitData(tagDataArray, remainingData = null) {
   let formattedTagData = tagDataArray.map((sentenceData) => {
