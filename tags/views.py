@@ -14,6 +14,7 @@ import os
 from django.shortcuts import get_object_or_404
 import pandas as pd
 import requests
+import re
 from datetime import datetime, timezone
 
 # Define the API endpoint for ner model
@@ -573,7 +574,7 @@ def login_page(request):
 
             # Otherwise, redirect to user home
             print("Redirecting to user home")
-            return redirect("/domain")
+            return redirect("/selection")
 
         else:
             print("Invalid credentials")
@@ -678,4 +679,352 @@ def tags(request):
         'tags_med': tag_manager.tags_med,
         'tags_fin': tag_manager.tags_fin
     })
-   
+
+@login_required(login_url='')
+def selection(request):
+    return render(request, 'tags/selection.html')
+
+# Add a new view for the validation page
+
+
+# Update your views.py with these new view functions
+
+@login_required(login_url='')
+def validation(request):
+    # This is the first validation page where users choose validation mode
+    tag_manager = TagManager.get_instance()
+    return render(request, 'tags/validation_domain.html')
+
+@login_required(login_url='')
+def validation_domain(request):
+    """Render the validation domain selection page"""
+    tag_manager = TagManager.get_instance()
+    return render(request, 'tags/validation_domain.html')
+
+@login_required(login_url='')
+def validation_home(request):
+    """
+    Render the validation home page with tags based on selected domain.
+    This page will automatically load data from domain-specific Excel files.
+    """
+    # Get the domain parameter from the query string
+    domain = request.GET.get('domain', 'Gen')
+    tag_manager = TagManager.get_instance()
+    
+    # Select tags based on domain
+    if domain == 'Gen':
+        tags = tag_manager.tags
+        tags2 = tag_manager.tags_med  # For UI consistency with home page
+    elif domain == 'Med':
+        tags = tag_manager.tags_med
+        tags2 = tag_manager.tags_med
+    else:  # Financial domain
+        tags = tag_manager.tags_fin if hasattr(tag_manager, 'tags_fin') else []
+        tags2 = tag_manager.tags_med  # For UI consistency
+    
+    return render(request, 'tags/validation_home.html', {
+        'tags': tags,
+        'tags2': tags2,
+        'domain': domain
+    })
+
+@login_required(login_url='')
+def get_annotations(request):
+    """
+    Get annotations from the appropriate Excel file based on domain.
+    Returns the annotations in a format suitable for the validation page.
+    """
+    domain = request.GET.get('domain', 'Gen')
+
+    processed_file = os.path.join(settings.BASE_DIR, 'tagproject', f'processed_paragraphs_{domain.lower()}.json')
+    processed_ids = []
+    if os.path.exists(processed_file):
+        try:
+            with open(processed_file, 'r') as f:
+                processed_ids = json.load(f)
+        except:
+            processed_ids = []
+    
+    # Map domain to filename
+    filename_map = {
+        'Gen': 'annotations_gen.xlsx',
+        'Med': 'annotations_med.xlsx',
+        'Fin': 'annotations_fin.xlsx'
+    }
+    
+    filename = filename_map.get(domain, 'annotations.xlsx')
+    file_path = os.path.join(settings.BASE_DIR, 'tagproject', 'results', filename)
+    
+    try:
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Annotation file not found for {domain} domain'
+            })
+            
+        # Read Excel file
+        df = pd.read_excel(file_path)
+        
+        # Convert dataframe to list of annotations
+        annotations = []
+        
+        # Assign paragraph IDs - FIXED LOGIC
+        paragraph_ids = []
+        current_para_id = 0
+        last_sentence_num = None
+        
+        for _, row in df.iterrows():
+            sentence_num = int(row['Sentence Number'])
+            
+            # Start a new paragraph when:
+            # 1. We see sentence number 0 AND
+            # 2. The previous sentence was NOT 0 AND NOT None (beginning of file)
+            if sentence_num == 0 and last_sentence_num is not None and last_sentence_num != 0:
+                current_para_id += 1
+                
+            paragraph_ids.append(current_para_id)
+            last_sentence_num = sentence_num
+            
+        # Add paragraph ID to dataframe
+        df['paragraph_id'] = paragraph_ids
+        
+        # Group by paragraph_id and sentence_number
+        groups = df.groupby(['paragraph_id', 'Sentence Number'])
+        
+        # Process each group (each sentence)
+        for (para_id, sentence_number), group in groups:
+            sentence_annotations = {}
+            
+            # Process each word in the sentence
+            for i, (_, row) in enumerate(group.iterrows()):
+                word = str(row['Word'])
+                tag = str(row['Tag'])
+                
+                # Add word to the sentence's annotations
+                sentence_annotations[i] = {
+                    'word': word,
+                    'tag': tag
+                }
+                
+            # Create annotation object
+            annotations.append({
+                'paragraph_id': int(para_id),
+                'sentence_number': int(sentence_number),
+                'annotations': sentence_annotations
+            })
+        filtered_annotations = [a for a in annotations if a['paragraph_id'] not in processed_ids]    
+        
+        return JsonResponse({
+            'status': 'success',
+            'annotations': filtered_annotations,
+            'filename': filename
+        })
+    
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        })
+
+@csrf_exempt
+@login_required(login_url='')
+def submit_validation(request):
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Only POST method is allowed'})
+
+    try:
+        # Parse the JSON data
+        data = json.loads(request.body)
+        domain = data.get('domain', 'Gen')
+        annotations = data.get('annotations', [])
+        is_valid = data.get('isValid', True)  # Default to valid if not specified
+        processed_paragraphs = data.get('processed_paragraphs', [])
+
+
+        if processed_paragraphs:
+            store_processed_paragraphs(domain, processed_paragraphs)
+
+        if len(annotations) == 0:
+            return JsonResponse({'status': 'error', 'message': 'No annotations provided'})
+        
+        # Mark these annotations as processed so they don't appear in future validations
+        # This would depend on your annotation storage system
+        # Assume we have a function to mark annotations as processed
+        mark_annotations_as_processed(annotations)
+        
+        if is_valid:
+            # Handle valid annotations - save to Excel
+            output_filename = data.get('filename', 'final.xlsx')
+            if domain == 'Gen':
+                output_path = os.path.join(settings.BASE_DIR, 'output', output_filename)
+            elif domain == 'Med':
+                output_path = os.path.join(settings.BASE_DIR, 'output', 'final_med.xlsx')
+            elif domain == 'Fin':
+                output_path = os.path.join(settings.BASE_DIR, 'output', 'final_fin.xlsx')
+            
+            # Create output directory if it doesn't exist
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
+            # Save annotations to Excel file (append if exists)
+            save_annotations_to_excel(annotations, output_path)
+            
+            # Update annotator statistics
+            try:
+                user = request.user
+                annotator = user.annotator
+                if domain == "Gen":
+                    annotator.general_validated_count = annotator.general_validated_count + 1 if hasattr(annotator, 'general_validated_count') else 1
+                elif domain == "Med":
+                    annotator.medical_validated_count = annotator.medical_validated_count + 1 if hasattr(annotator, 'medical_validated_count') else 1
+                elif domain == "Fin":
+                    annotator.financial_validated_count = annotator.financial_validated_count + 1 if hasattr(annotator, 'financial_validated_count') else 1
+                annotator.save()
+            except Exception as e:
+                print(f"Could not update annotator statistics: {str(e)}")
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Validation saved successfully to {output_filename}'
+            })
+        else:
+            # Handle invalid annotations - save to text file
+            text_folder = ""
+            if domain == "Gen":
+                text_folder = os.path.join(settings.BASE_DIR,'tagproject', 'text_files')
+            elif domain == "Med":
+                text_folder = os.path.join(settings.BASE_DIR, '..', 'tagproject', 'text_files_med')
+            elif domain == "Fin":
+                text_folder = os.path.join(settings.BASE_DIR, '..', 'tagproject', 'text_files_fin')
+            
+            # Create directory if it doesn't exist
+            os.makedirs(text_folder, exist_ok=True)
+            
+            # Generate a unique filename based on timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            text_file = os.path.join(text_folder, f"invalid_{timestamp}.txt")
+            
+            # Write paragraph content to text file
+            with open(text_file, 'w', encoding='utf-8') as f:
+                
+                
+                for annotation in annotations:
+                
+                    
+                    sorted_words = []
+                    for word_idx in sorted(annotation['annotations'].keys(), key=int):
+                        sorted_words.append(annotation['annotations'][word_idx]['word'])
+                    
+                    paragraph_text = ' '.join(sorted_words)
+                    # Clean up extra spaces around punctuation
+                    paragraph_text = re.sub(r'\s+([,.!?;:])', r'\1', paragraph_text)
+                    
+                    f.write(f"{paragraph_text}\n")
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Invalid annotation saved to text file'
+            })
+            
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error saving validation: {str(e)}'
+        })
+
+def store_processed_paragraphs(domain, paragraph_ids):
+    """Store processed paragraph IDs in a JSON file to prevent them from showing again"""
+    processed_file = os.path.join(settings.BASE_DIR, 'tagproject', f'processed_paragraphs_{domain.lower()}.json')
+    
+    # Load existing processed IDs
+    existing_ids = []
+    if os.path.exists(processed_file):
+        try:
+            with open(processed_file, 'r') as f:
+                existing_ids = json.load(f)
+        except:
+            existing_ids = []
+    
+    # Add new IDs
+    existing_ids.extend(paragraph_ids)
+    # Remove duplicates
+    existing_ids = list(set(existing_ids))
+    
+    # Save back to file
+    with open(processed_file, 'w') as f:
+        json.dump(existing_ids, f)
+
+# Helper function to mark annotations as processed
+def mark_annotations_as_processed(annotations):
+    """
+    Mark annotations as processed so they don't appear in future validations.
+    This function needs to be implemented based on your data storage system.
+    """
+    # Example implementation - would need to be adjusted for your specific database setup
+    annotation_ids = [ann.get('id') for ann in annotations if 'id' in ann]
+    if annotation_ids:
+        # Assuming you have a model called Annotation with a "processed" field
+        # Annotation.objects.filter(id__in=annotation_ids).update(processed=True)
+        pass  # Replace with actual implementation
+
+# Helper function to save annotations to Excel
+def save_annotations_to_excel(annotations, output_path):
+    """
+    Save annotations to an Excel file.
+    If the file exists, append the new annotations.
+    """
+    # First check if file exists and load existing data if it does
+    existing_data = []
+    try:
+        if os.path.exists(output_path):
+            # Read existing data
+            df = pd.read_excel(output_path)
+            existing_data = df.to_dict('records')
+    except Exception as e:
+        print(f"Error reading existing Excel file: {str(e)}")
+    
+    # Prepare data for Excel export
+    excel_data = []
+    
+    for annotation in annotations:
+        paragraph_id = annotation.get('paragraph_id', '')
+        sentence_number = annotation.get('sentence_number', '')
+        
+        # Process each word in the annotation
+        for word_idx, word_data in annotation.get('annotations', {}).items():
+            word = word_data.get('word', '')
+            tag = word_data.get('tag', 'O')
+            
+            excel_data.append({
+                'paragraph_id': paragraph_id,
+                'sentence_number': sentence_number,
+                'word_index': word_idx,
+                'word': word,
+                'tag': tag
+            })
+    
+    # Combine with existing data
+    all_data = existing_data + excel_data
+    
+    # Convert to DataFrame and save
+    df = pd.DataFrame(all_data)
+    df.to_excel(output_path, index=False)
+
+@login_required(login_url='')
+def skip_annotation(request):
+    """
+    Skip to another annotation set if available.
+    Similar to skip_file but for validation mode.
+    """
+    domain = request.GET.get('domain', 'Gen')
+    current_index = request.GET.get('current', 0)
+    
+    # For now, just return the same annotations but starting from a different point
+    # You could implement more sophisticated logic here if needed
+    
+    # This simply reuses the get_annotations function
+    return get_annotations(request)

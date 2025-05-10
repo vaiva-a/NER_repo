@@ -48,4 +48,11 @@ urlpatterns = [
     path('delete_upload/', views.delete_upload_file, name='delete_upload'),
     path('delete_tag/', views.delete_tag, name='delete_tag'),
     path('heartbeat/',views.heartbeat,name="heartbeat"),
+    path('selection/', views.selection, name='selection'),  
+    path('validation/', views.validation, name='validation'),
+    path('validation_domain/', views.validation_domain, name='validation_domain'),
+    path('validation_home/', views.validation_home, name='validation_home'),
+    path('get_annotations/', views.get_annotations, name='get_annotations'),
+    path('skip_annotation/', views.skip_annotation, name='skip_annotation'),
+    path('submit_validation/', views.submit_validation, name='submit_validation'),
 ]
