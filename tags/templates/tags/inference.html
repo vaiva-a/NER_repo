@@ -4,6 +4,7 @@
 
 <head>
     <title>Inference Page</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/navbar.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'css/inference.css' %}">
     <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 </head>
@@ -22,7 +23,11 @@
                 <span class="logo">Annotator Dashboard</span>
                 <ul class="nav-links">
                     <li><a href="/home">Home</a></li>
-                    <li><a href="/inference" class="active">Inference</a></li>
+                </ul>
+                <ul class="nav-links">
+                    <li><a href="/inference">Inference</a></li>
+                </ul>
+                <ul class="nav-links">
                     <li><a href="/domain">Domain</a></li>
                 </ul>
             </div>

@@ -586,7 +586,7 @@ label[for="tagCategory"] {
 }
 
 /* Navbar styling - preserved as per original */
-.navbar {
+/* .navbar {
   background-color: #2d3748;
   padding: 12px 24px;
   display: flex;
@@ -664,7 +664,7 @@ label[for="tagCategory"] {
 .logout-btn:active {
   transform: translateY(1px);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
+} */
 
 /* Responsive design */
 @media (max-width: 1024px) {

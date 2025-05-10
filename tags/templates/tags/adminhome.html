@@ -5,6 +5,7 @@
 <head>
   <title>Admin Dashboard</title>
   <link rel="stylesheet" type="text/css" href="{% static 'css/adminpage.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/navbar.css' %}" />
   <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 
 </head>
@@ -19,18 +20,24 @@
   
   <nav class="navbar">
     <div class="navbar-container">
-      <span class="logo">Admin Dashboard</span>
-      <ul class="nav-links">
-        <li><a href="/adminhome">Home </a></li>
-        <li><a href="/adminhome/users">Users</a></li>
-        <li><a href="/adminhome/tags">Tags</a></li>
-      </ul>
-      <form action="{% url 'logout' %}" method="post" class="logout-form">
-        {% csrf_token %}
-        <button type="submit" class="logout-btn">Logout</button>
-      </form>
+        <div class="left-section">
+            <span class="logo">Annotator Dashboard</span>
+            <ul class="nav-links">
+                <li><a href="/adminhome">Home</a></li>
+            </ul>
+            <ul class="nav-links">
+                <li><a href="/adminhome/users">Users</a></li>
+            </ul>
+            <ul class="nav-links">
+                <li><a href="/adminhome/tags">Tags</a></li>
+            </ul>
+        </div>
+        <form action="{% url 'logout' %}" method="post" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">Logout</button>
+        </form>
     </div>
-  </nav>
+</nav>
   <div class="admin-container">
     <!-- <div class="button-group">
       <button class="action-button" onclick="openAddUserDialog()">

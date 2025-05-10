@@ -76,7 +76,7 @@ body {
 }
 
 /* Navbar styles */
-.navbar {
+/* .navbar {
   background-color: #2d3748;
   color: white;
   width: 100%;
@@ -130,12 +130,12 @@ body {
   border-radius: 6px;
 }
 
-.nav-links a:hover {
+/* .nav-links a:hover {
   color: #63b3ed;
   background-color: rgba(255, 255, 255, 0.1);
-}
+} */
 
-.nav-links a.active {
+/* .nav-links a.active {
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
 }
@@ -159,7 +159,7 @@ body {
 .logout-btn:hover {
   background-color: #c53030;
   transform: translateY(-2px);
-}
+} */
 
 /* Main container */
 .container {

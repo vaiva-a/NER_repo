@@ -65,7 +65,7 @@ body {
 }
 
 /* Navbar styles */
-.navbar {
+/* .navbar {
     background-color: #2d3748;
     color: white;
     width: 100%;
@@ -150,7 +150,7 @@ body {
 .logout-btn:hover {
     background-color: #c53030;
     transform: translateY(-2px);
-}
+} */
 
 /* Container and main content */
 .container {

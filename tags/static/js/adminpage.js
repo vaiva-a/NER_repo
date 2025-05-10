@@ -290,7 +290,7 @@ function getCsrfToken() {
 //     const tagInput = document.getElementById("tagInput").value;
 //     console.log("new check");
 
-//     fetch("/add_tag/", {
+//     fetch("/add_tag/", {list
 //         method: "POST",
 //         headers: {
 //             "Content-Type": "application/x-www-form-urlencoded",

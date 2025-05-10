@@ -4,6 +4,7 @@
 
 <head>
     <title>Tag Management Page</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/navbar.css' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'css/tagpage.css' %}">
     <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
 </head>
@@ -22,8 +23,12 @@
                 <span class="logo">Annotator Dashboard</span>
                 <ul class="nav-links">
                     <li><a href="/adminhome">Home</a></li>
+                </ul>
+                <ul class="nav-links">
                     <li><a href="/adminhome/users">Users</a></li>
-                    <li><a href="/tags" class="active">Tags</a></li>
+                </ul>
+                <ul class="nav-links">
+                    <li><a href="/adminhome/tags">Tags</a></li>
                 </ul>
             </div>
             <form action="{% url 'logout' %}" method="post" class="logout-form">
@@ -32,7 +37,6 @@
             </form>
         </div>
     </nav>
-
     <div class="container">
         <div class="tag-management">
             <div class="tag-search-box">
