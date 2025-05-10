@@ -35,6 +35,13 @@
 
 
 <body class="bg-gray-50">
+    <div class="background">
+        <div class="waves">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+    </div>
 
     <script>
         const tag1 = "{{ tags|safe }}"; 
@@ -46,10 +53,10 @@
             <div class="left-section">
                 <span class="logo">Validation Dashboard</span>
                 <ul class="nav-links">
-                    <li><a href="/home">Home</a></li>
+                    <li><a href="/selection">Selection</a></li>
                 </ul>
                 <ul class="nav-links">
-                    <li><a href="/validation_domain">Validation</a></li>
+                    <li><a href="/validation_domain">Domain</a></li>
                 </ul>
             </div>
             <form action="{% url 'logout' %}" method="post" class="logout-form">
@@ -74,27 +81,25 @@
                 <span id="currentDomain" class="font-semibold bg-blue-100 px-2 py-1 rounded"></span>
             </div>
             <div id="sentencesContainer" class="p-4 border rounded-lg bg-white shadow-md"
-                style="max-height: 600px; overflow-y: auto"></div>
+                style="max-height: 395px; overflow-y: auto"></div>
             <div id="currentFileName" class="text-sm text-gray-500 mt-2"></div>
-            <div class="flex mt-4 space-x-2">
-                
-                <button onclick="submitValidAnnotation()" class="p-2 bg-blue-500 text-white rounded">Valid Annotation</button>
-                <button  class="p-2 bg-red-500 text-white rounded" onclick="submitInvalidAnnotation()">
+            <div class="flex flex-wrap mt-4 space-x-2">
+                <button onclick="submitValidAnnotation()" class="p-2 bg-green-500 text-white rounded">
+                    Valid Annotation
+                </button>
+                <button class="p-2 bg-red-500 text-white rounded" onclick="submitInvalidAnnotation()">
                     Invalid Annotation
                 </button>
-                <!-- <button class="p-2 bg-yellow-500 text-white rounded" onclick="skipAnnotation()">
-                    Skip
-                </button> -->
-                <button id="paginationPrev" class="p-2 bg-gray-300 text-gray-700 rounded" onclick="loadPreviousAnnotation()">
+                <button id="paginationPrev" class="p-2 bg-gray-500 text-white rounded" onclick="loadPreviousAnnotation()">
                     Previous
                 </button>
-                <button id="paginationNext" class="p-2 bg-gray-300 text-gray-700 rounded" onclick="loadNextAnnotation()">
+                <button id="paginationNext" class="p-2 bg-gray-500 text-white rounded" onclick="loadNextAnnotation()">
                     Next
                 </button>
             </div>
-            <div class="mt-4 text-center">
+            <!-- <div class="mt-4 text-center">
                 <span id="currentAnnotation">0</span> / <span id="totalAnnotations">0</span>
-            </div>
+            </div> -->
         </div>
 
         <div class="tag-container">
@@ -103,18 +108,16 @@
         </div>
 
         <!-- Dialog Box HTML -->
-        <div id="emptyLinesDialog"
-            style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #ccc; padding: 20px; z-index: 1000;">
-            <p>Do you approve these tags?</p>
-            <button id="cancelBtn">Cancel</button>
-            <button id="submitAnywaysBtn">Submit </button>
-            
+        <div id="emptyLinesDialog" class="bg-white rounded-lg shadow-xl p-6">
+            <p class="text-gray-800 text-lg mb-4">Do you approve these tags?</p>
+            <div class="button-group">
+                <button id="cancelBtn" class="bg-red-500 text-white">Cancel</button>
+                <button id="submitAnywaysBtn" class="bg-green-500 text-white">Approve</button>
+            </div>
         </div>
 
         <!-- Optional overlay for backdrop effect -->
-        <div id="dialogOverlay"
-            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;">
-        </div>
+        <div id="dialogOverlay"></div>
     </div>
 </body>
 </html>

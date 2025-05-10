@@ -63,7 +63,7 @@ function loadAnnotations() {
                 totalDocuments = documents.length;
 
                 // Update UI
-                document.getElementById("totalAnnotations").textContent = totalDocuments;
+                // document.getElementById("totalAnnotations").textContent = totalDocuments;
                 document.getElementById("currentFileName").textContent = fileName;
 
                 // Display first document
@@ -125,7 +125,7 @@ function displayCurrentDocument() {
     sentencesContainer.innerHTML = "";
 
     // Update counter
-    document.getElementById("currentAnnotation").textContent = currentDocumentIndex + 1;
+    // document.getElementById("currentAnnotation").textContent = currentDocumentIndex + 1;
 
     // Create document container
     const documentDiv = document.createElement("div");
