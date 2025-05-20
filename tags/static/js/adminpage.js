@@ -61,7 +61,7 @@ document
     .addEventListener("change", handleFileUpload);
 
 function handleFileUpload(event) {
-    //event.preventDefault();
+    // const category = document.getElementById("category-select").value;
     const file = event.target.files
         ? event.target.files[0]
         : event.dataTransfer.files[0];
@@ -70,18 +70,21 @@ function handleFileUpload(event) {
         alert("No file selected!");
         return;
     }
-
     const formData = new FormData();
     formData.append("file", file);
+    const selectedCategory = document.getElementById("file-category").value;
+    console.log(selectedCategory);
+    formData.append("category", selectedCategory);  // Add category to form
 
     fetch("/upload_file/", {
         method: "POST",
         body: formData,
     })
-        .then((response) => response.json()) // Ensure JSON parsing
+        .then((response) => response.json())
         .then((data) => {
             if (data.status === "success") {
                 alert("File uploaded successfully!");
+                fetchResultFiles();
             } else {
                 alert("File upload failed: " + data.message);
             }
@@ -149,6 +152,7 @@ function fetchResultFiles() {
 }
 
 document.addEventListener("DOMContentLoaded", fetchUploadedFiles);
+
 function fetchUploadedFiles() {
     fetch("/list_uploads/")
         .then((response) => response.json())
@@ -156,28 +160,102 @@ function fetchUploadedFiles() {
             const resultList = document.getElementById("upload-files-list");
             resultList.innerHTML = ""; // Clear existing list
 
-            data.files.forEach((file) => {
+            // Combine files from all folders into one array with folder info
+            const genFiles = [];
+            const finFiles = [];
+            const medFiles = [];
+
+            (data.text_files || []).forEach((file) => {
+                genFiles.push({ name: file, folder: "text_files" });
+            });
+
+            (data.text_files_fin || []).forEach((file) => {
+                finFiles.push({ name: file, folder: "text_files_fin" });
+            });
+
+            (data.text_files_med || []).forEach((file) => {
+                medFiles.push({ name: file, folder: "text_files_mdd" });
+            });
+            const genType = document.createElement("h4");
+            genType.textContent = "General Files";
+            resultList.appendChild(genType);
+            genFiles.forEach((fileObj) => {
+                
+
                 const listItem = document.createElement("li");
-                listItem.textContent = file;
+                listItem.textContent = fileObj.name;
 
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "Delete ";
                 deleteButton.classList.add("delete-btn");
+
                 const deleteIcon = document.createElement("img");
                 deleteIcon.src = "/static/images/delete-icon.png";
                 deleteIcon.alt = "Delete";
                 deleteIcon.width = 20;
                 deleteIcon.height = 20;
                 deleteButton.appendChild(deleteIcon);
-                deleteButton.onclick = () => deleteUploadFile(file);
 
+                deleteButton.onclick = () => deleteUploadFile(fileObj.name, fileObj.folder);
+                
                 listItem.appendChild(deleteButton);
-
                 resultList.appendChild(listItem);
+                
             });
+            const finType = document.createElement("h4");
+            finType.textContent = "Financial Files";
+            resultList.appendChild(finType);
+            medFiles.forEach((fileObj) => {
+                const listItem = document.createElement("li");
+                listItem.textContent = fileObj.name;
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete ";
+                deleteButton.classList.add("delete-btn");
+
+                const deleteIcon = document.createElement("img");
+                deleteIcon.src = "/static/images/delete-icon.png";
+                deleteIcon.alt = "Delete";
+                deleteIcon.width = 20;
+                deleteIcon.height = 20;
+                deleteButton.appendChild(deleteIcon);
+
+                deleteButton.onclick = () => deleteUploadFile(fileObj.name, fileObj.folder);
+                
+                listItem.appendChild(deleteButton);
+                resultList.appendChild(listItem);
+                
+            });
+            const medType = document.createElement("h4");
+            medType.textContent = "Medical Files";
+            resultList.appendChild(medType);
+            medFiles.forEach((fileObj) => {
+                const listItem = document.createElement("li");
+                listItem.textContent = fileObj.name;
+
+                const deleteButton = document.createElement("button");
+                deleteButton.textContent = "Delete ";
+                deleteButton.classList.add("delete-btn");
+
+                const deleteIcon = document.createElement("img");
+                deleteIcon.src = "/static/images/delete-icon.png";
+                deleteIcon.alt = "Delete";
+                deleteIcon.width = 20;
+                deleteIcon.height = 20;
+                deleteButton.appendChild(deleteIcon);
+
+                deleteButton.onclick = () => deleteUploadFile(fileObj.name, fileObj.folder);
+                
+                listItem.appendChild(deleteButton);
+                resultList.appendChild(listItem);
+                
+            });
+            
+            
         })
         .catch((error) => console.error("Error fetching files:", error));
 }
+
 
 
 function downloadFile(filename) {

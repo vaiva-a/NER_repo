@@ -695,3 +695,84 @@ label[for="tagCategory"] {
     gap: 16px;
   }
 }
+/* File Category Select Styling */
+.select-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+label[for="file-category"] {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 16px;
+}
+
+#file-category {
+  width: 100%;
+  max-width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 16px;
+  background-color: #ffffff;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234299e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px top 50%;
+  background-size: 16px auto;
+  padding-right: 40px;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+#file-category:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+#file-category:hover {
+  border-color: #4299e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+#file-category option {
+  font-size: 16px;
+  background: white;
+  color: #2d3748;
+  padding: 16px;
+  line-height: 1.5;
+}
+
+/* Custom styling for dropdown options in supporting browsers */
+#file-category option:hover,
+#file-category option:focus,
+#file-category option:active {
+  background-color: #ebf8ff;
+}
+
+/* Add a subtle highlight for the selected option */
+
+
+/* Enhance the dropdown with a subtle indicator */
+.select-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50px;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.8));
+  border-radius: 0 10px 10px 0;
+}
+.upload-file{
+  margin-top: 0;
+}

@@ -586,14 +586,22 @@ def logout_view(request):
     logout(request)
     return redirect("/")  
 
-UPLOAD_DIR = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files')
-os.makedirs(UPLOAD_DIR, exist_ok=True)  # Ensure directory exists
+
+ # Ensure directory exists
 
 @csrf_exempt
 def upload_file(request):
-    if request.method == 'POST' and request.FILES.get('file'):
+    if request.method == 'POST':
+        print("checking",request.FILES.get('file'))
         uploaded_file = request.FILES['file']
-        file_path = os.path.join(UPLOAD_DIR, uploaded_file.name)
+        category = request.POST.get('category', 'text_files')
+
+        print("This is the category from frontend:", category)
+
+        upload_dir = os.path.join(settings.BASE_DIR, 'tagproject', category)
+        os.makedirs(upload_dir, exist_ok=True)
+
+        file_path = os.path.join(upload_dir, uploaded_file.name)
 
         with default_storage.open(file_path, 'wb+') as destination:
             for chunk in uploaded_file.chunks():
@@ -601,9 +609,10 @@ def upload_file(request):
 
         return JsonResponse({'status': 'success', 'message': 'File uploaded successfully!'})
 
+    # If we get here, it means file was not received
     return JsonResponse({'status': 'error', 'message': 'No file provided!'}, status=400)
 
-RESULTS_DIR = os.path.join(settings.BASE_DIR, 'tagproject','results')
+RESULTS_DIR = os.path.join(settings.BASE_DIR,'output')
 UPLOAD_DIR = os.path.join(settings.BASE_DIR, 'tagproject','text_files')
 def list_result_files(request):
     if request.method == 'GET':
@@ -614,12 +623,27 @@ def list_result_files(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
         
+TEXT_FILES_DIR = os.path.join(settings.BASE_DIR, 'tagproject','text_files')
+TEXT_FILES_FIN_DIR = os.path.join(settings.BASE_DIR, 'tagproject','text_files_fin')
+TEXT_FILES_MED_DIR = os.path.join(settings.BASE_DIR, 'tagproject','text_files_med')
+
 def list_uploaded_files(request):
     if request.method == 'GET':
         try:
-            files = [f for f in os.listdir(UPLOAD_DIR) if f.endswith('.txt')]
-            print("Printing uploaded files",files)
-            return JsonResponse({'files': files})
+            text_files = [f for f in os.listdir(TEXT_FILES_DIR) if f.endswith('.txt')]
+            text_files_fin = [f for f in os.listdir(TEXT_FILES_FIN_DIR) if f.endswith('.txt')]
+            text_files_med = [f for f in os.listdir(TEXT_FILES_MED_DIR) if f.endswith('.txt')]
+
+            print("Text files:", text_files)
+            print("Text files FIN:", text_files_fin)
+            print("Text files MED:", text_files_med)
+
+            return JsonResponse({
+                'text_files': text_files,
+                'text_files_fin': text_files_fin,
+                'text_files_med': text_files_med
+            })
+
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
 
@@ -857,7 +881,7 @@ def submit_validation(request):
         
         if is_valid:
             # Handle valid annotations - save to Excel
-            output_filename = data.get('filename', 'final.xlsx')
+            output_filename = data.get('filename', 'final_gen.xlsx')
             if domain == 'Gen':
                 output_path = os.path.join(settings.BASE_DIR, 'output', output_filename)
             elif domain == 'Med':

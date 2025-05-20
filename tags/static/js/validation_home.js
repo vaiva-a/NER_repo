@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAnnotations();
 
     // Add keyboard shortcuts
-    document.addEventListener("keydown", handleKeyboardShortcuts);
+    // document.addEventListener("keydown", handleKeyboardShortcuts);
 });
 
 // Function to load annotations from server based on domain
@@ -549,7 +549,7 @@ function submitValidatedData(validatedData, isSingleDocument = false) {
 
                 if (isSingleDocument) {
                     // Remove this document from the local list
-                    removeCurrentDocumentFromList();
+                    // removeCurrentDocumentFromList();
 
                     // If there are more documents, show the next one
                     if (documents.length > 0) {
