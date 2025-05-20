@@ -594,6 +594,8 @@ def upload_file(request):
     if request.method == 'POST':
         print("checking",request.FILES.get('file'))
         uploaded_file = request.FILES['file']
+        if not uploaded_file.name.endswith('.txt'):
+            return JsonResponse({})
         category = request.POST.get('category', 'text_files')
 
         print("This is the category from frontend:", category)
@@ -680,9 +682,11 @@ def delete_upload_file(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         filename = data.get('filename')
+        folder_path = data.get('folder')
+        print(folder_path)
         if not filename:
             return JsonResponse({'status': 'error', 'message': 'Filename is required'})
-
+        UPLOAD_DIR = os.path.join(settings.BASE_DIR, 'tagproject',folder_path)
         file_path = os.path.join(UPLOAD_DIR, filename)
         if os.path.exists(file_path):
             os.remove(file_path)

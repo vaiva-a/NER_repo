@@ -55,7 +55,13 @@
 //         alert("Tag name cannot be empty!");
 //     }
 // }
-
+document.getElementById("file-input").addEventListener("change", function () {
+    const file = this.files[0];
+    if (file && !file.name.endsWith(".txt")) {
+        alert("Only .txt files are allowed!");
+        this.value = "";
+    }
+});
 document
     .getElementById("file-input")
     .addEventListener("change", handleFileUpload);
@@ -174,14 +180,12 @@ function fetchUploadedFiles() {
             });
 
             (data.text_files_med || []).forEach((file) => {
-                medFiles.push({ name: file, folder: "text_files_mdd" });
+                medFiles.push({ name: file, folder: "text_files_med" });
             });
             const genType = document.createElement("h4");
             genType.textContent = "General Files";
             resultList.appendChild(genType);
             genFiles.forEach((fileObj) => {
-                
-
                 const listItem = document.createElement("li");
                 listItem.textContent = fileObj.name;
 
@@ -205,10 +209,9 @@ function fetchUploadedFiles() {
             const finType = document.createElement("h4");
             finType.textContent = "Financial Files";
             resultList.appendChild(finType);
-            medFiles.forEach((fileObj) => {
+            finFiles.forEach((fileObj) => {
                 const listItem = document.createElement("li");
                 listItem.textContent = fileObj.name;
-
                 const deleteButton = document.createElement("button");
                 deleteButton.textContent = "Delete ";
                 deleteButton.classList.add("delete-btn");
@@ -221,7 +224,6 @@ function fetchUploadedFiles() {
                 deleteButton.appendChild(deleteIcon);
 
                 deleteButton.onclick = () => deleteUploadFile(fileObj.name, fileObj.folder);
-                
                 listItem.appendChild(deleteButton);
                 resultList.appendChild(listItem);
                 
@@ -288,14 +290,14 @@ function deleteFile(filename) {
             });
     }
 }
-function deleteUploadFile(filename) {
+function deleteUploadFile(filename,folder) {
     if (confirm(`Are you sure you want to delete ${filename}?`)) {
         fetch("/delete_upload/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ filename: filename }),
+            body: JSON.stringify({ filename: filename,folder:folder }),
         })
             .then((response) => response.json())
             .then((data) => {
@@ -310,6 +312,7 @@ function deleteUploadFile(filename) {
                 console.error("Error deleting file:", error);
                 alert("Failed to delete file.");
             });
+
     }
 }
 
@@ -388,4 +391,5 @@ function getCsrfToken() {
 //         })
 //         .catch((error) => console.error("Error:", error));
 // }
+
 
