@@ -21,6 +21,8 @@ from datetime import datetime, timezone
 url = "http://127.0.0.1:8002/predict"
 url_learn = "http://127.0.0.1:8002/learn"
 url_fin = "http://127.0.0.1:8004/predict"
+url_med = "http://127.0.0.1:8006/predict"
+
 
 @login_required(login_url='')
 def home(request):
@@ -391,7 +393,7 @@ def get_paragraph(request):
     elif selected_domain == "Med":
         text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
         picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_med.json')
-        url1 = url
+        url1 = url_med
     else:
         text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_fin')
         picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_fin.json')
@@ -466,7 +468,7 @@ def auto_tag(request):
         if(domain == "Gen"):
             url1 = url
         elif (domain == "Med"):
-            url1 = url
+            url1 = url_med
         else:
             url1 = url_fin
         # Send the POST request
@@ -491,7 +493,7 @@ def skip_file(request):
     elif selected_domain=="Med":
         text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_med')
         picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_med.json')
-        url1=url
+        url1=url_med
     else:
         text_files_dir = os.path.join(settings.BASE_DIR, 'tagproject', 'text_files_fin')
         picked_files_path = os.path.join(settings.BASE_DIR, 'tagproject', 'picked_files_fin.json')
