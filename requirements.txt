@@ -1,0 +1,15 @@
+Django
+gunicorn
+whitenoise
+dj-database-url
+psycopg2
+pandas
+openpyxl
+fastapi
+uvicorn
+python-multipart
+torch
+transformers
+datasets
+torchcrf
+requests

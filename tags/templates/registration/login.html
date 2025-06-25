@@ -1,0 +1,104 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/login.css' %}">
+</head>
+
+<body>
+    <div class="background">
+        <div class="waves">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+        <div class="shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <div class="info-side">
+            <div class="floating-icons">
+                <div class="icon">+</div>
+                <div class="icon">○</div>
+                <div class="icon">□</div>
+                <div class="icon">×</div>
+            </div>
+            <h1>Welcome back!</h1>
+            <p>You can sign in to access with your existing account. Get ready to explore all the amazing features we
+                offer.</p>
+        </div>
+
+        <div class="form-side">
+            <h2>Sign In</h2>
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <div class="icon-input">
+                        <i>👤</i>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <div class="icon-input">
+                        <i>🔒</i>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <!-- New Task Selection Section -->
+                <div class="input-group">
+                    <label>Choose your task:</label>
+                    <div class="task-selection">
+                        <label class="task-option">
+                            <input type="radio" name="task_type" value="annotation">
+                            <span class="radio-custom"></span>
+                            <div class="task-info">
+                                <strong>Annotation</strong>
+                                <small>Create and manage annotations</small>
+                            </div>
+                        </label>
+                        <label class="task-option">
+                            <input type="radio" name="task_type" value="validation">
+                            <span class="radio-custom"></span>
+                            <div class="task-info">
+                                <strong>Validation</strong>
+                                <small>Review and validate data</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {% if error %}
+                <div class="error-messages">
+                    <div class="alert alert-error">{{ error }}</div>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="login-btn">Sign In</button>
+                
+
+                {% if messages %}
+                <div class="error-messages">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
